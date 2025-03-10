@@ -9,3 +9,5 @@
    <li>Spring Boot</li>
    <li>Spring Web</li>
    <li>REST API</li></o>
+<h2>REST API</h2>
+<p>Поддержка HTTP метода GET c Query и Path Parametrs</p>
