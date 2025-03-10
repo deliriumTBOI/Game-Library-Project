@@ -8,6 +8,7 @@ class GameLibApplicationTests {
 
 	@Test
 	void contextLoads() {
+		//test is empty
 	}
 
 }

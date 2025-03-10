@@ -4,7 +4,6 @@ import com.gamelib.gamelib.model.Company;
 import com.gamelib.gamelib.model.Game;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -29,7 +28,7 @@ public class GameRepository {
     public List<Game> findByCompanyName(String companyName) {
         return games.stream()
                 .filter(g -> g.getCompany().getName().equalsIgnoreCase(companyName))
-                .collect(Collectors.toList());
+                .toList();
     }
 }
 
