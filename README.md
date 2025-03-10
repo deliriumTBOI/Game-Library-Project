@@ -31,18 +31,3 @@
 "region": "US"
 }</code></pre>
 
-<h3>Удаление игры из библиотеки</h3> <pre><code>DELETE /games/{id}</code></pre> <p>Пример:</p> <pre><code>DELETE /games/1</code></pre><h3>Просмотр игр от определенного издателя</h3> <pre><code>GET /games/publisher?name=НазваниеИздателя</code></pre> <p>Пример:</p> <pre><code>GET /games/publisher?name=Electronic Arts</code></pre><h3>Создание коллекции игр по категории</h3> <pre><code>POST /collections Content-Type: application/json
-{
-"name": "НазваниеКоллекции",
-"category": "Категория",
-"gameIds": [1, 2, 3]
-}</code></pre>
-
-<p>Пример:</p> <pre><code>POST /collections Content-Type: application/json
-{
-"name": "Лучшие RPG",
-"category": "RPG",
-"gameIds": [1, 2, 3]
-}</code></pre>
-
-<h2>Мониторинг цен на игры</h2> <p>Для мониторинга цен на игры в различных регионах используйте следующий запрос:</p> <pre><code>GET /games/price?region=Регион</code></pre> <p>Пример:</p> <pre><code>GET /games/price?region=US</code></pre><h2>Лицензия</h2> <p>Этот проект распространяется под лицензией MIT. Подробнее см. в файле <a href="LICENSE">LICENSE</a>.</p><h2>Авторы</h2> <ul> <li>Ваше Имя - <a href="https://github.com/ваш-профиль">GitHub</a></li> </ul><h2>Благодарности</h2> <p>Спасибо всем, кто поддерживал и вдохновлял на создание этого проекта!</p><h2>Контрибуция</h2> <p>Если вы хотите внести свой вклад в проект, пожалуйста, создайте pull request. Мы рады любым улучшениям и предложениям!</p><h2>Контакты</h2> <p>Если у вас есть вопросы или предложения, свяжитесь со мной через <a href="mailto:ваш-email@example.com">email</a>.</p>
