@@ -17,6 +17,10 @@ public class GameService {
         return repository.findAll();
     }
 
+    public Game getGameById(Long id) {
+        return repository.findById(id);
+    }
+
     public Game getGameByTitle(String title) {
         return repository.findByTitle(title);
     }

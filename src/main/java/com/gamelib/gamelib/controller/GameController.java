@@ -20,29 +20,24 @@ public class GameController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Game>> getAllGames() {
-        List<Game> games = service.getAllGames();
-        return games.isEmpty() ? ResponseEntity.notFound().build() : ResponseEntity.ok(games);
+    public List<Game> getAllGames() {
+        return service.getAllGames();
     }
 
     @GetMapping("/search")
     public ResponseEntity<Game> getGameByQuery(@RequestParam String title) {
-        return getGameResponse(title);
-    }
-
-    @GetMapping("/{title}")
-    public ResponseEntity<Game> getGameByPath(@PathVariable String title) {
-        return getGameResponse(title);
-    }
-
-    private ResponseEntity<Game> getGameResponse(String title) {
         Game game = service.getGameByTitle(title);
         return game != null ? ResponseEntity.ok(game) : ResponseEntity.notFound().build();
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<Game> getGameById(@PathVariable Long id) {
+        Game game = service.getGameById(id);
+        return game != null ? ResponseEntity.ok(game) : ResponseEntity.notFound().build();
+    }
+
     @GetMapping("/company")
-    public ResponseEntity<List<Game>> getGamesByCompany(@RequestParam String name) {
-        List<Game> games = service.getGamesByCompanyName(name);
-        return games.isEmpty() ? ResponseEntity.notFound().build() : ResponseEntity.ok(games);
+    public List<Game> getGamesByCompany(@RequestParam String name) {
+        return service.getGamesByCompanyName(name);
     }
 }
