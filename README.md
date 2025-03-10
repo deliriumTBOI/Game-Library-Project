@@ -1,4 +1,21 @@
-<h2>Установка и запуск проекта</h2> <p>Для запуска проекта необходимо выполнить следующие шаги:</p> <ol> <li>Убедитесь, что у вас установлены Java 17 и Maven.</li> <li>Склонируйте репозиторий с проектом:</li> <pre><code>git clone https://github.com/ваш-репозиторий/game-library.git</code></pre> <li>Перейдите в директорию проекта:</li> <pre><code>cd game-library</code></pre> <li>Соберите проект с помощью Maven:</li> <pre><code>mvn clean install</code></pre> <li>Запустите приложение:</li> <pre><code>mvn spring-boot:run</code></pre> <li>Приложение будет доступно по адресу <a href="http://localhost:8080">http://localhost:8080</a>.</li> </ol><h2>Примеры запросов к API</h2> <p>Ниже приведены примеры запросов к API:</p><h3>Поиск игры по названию</h3> <pre><code>GET /games?title=НазваниеИгры</code></pre> <p>Пример:</p> <pre><code>GET /games?title=The Witcher 3</code></pre><h3>Поиск игры по информации о компании</h3> <pre><code>GET /games?company=НазваниеКомпании</code></pre> <p>Пример:</p> <pre><code>GET /games?company=CD Projekt Red</code></pre><h3>Добавление игры в библиотеку</h3> <pre><code>POST /games Content-Type: application/json
+<h1>Game Library</h1>
+<p><b>Game Library</b> — это REST API для управления игровой библиотекой</p>
+<h2>Функционал</h2>
+<o><li>Поиск игры по названию</li>
+   <li>Поиск игры по информации о компании</li>
+   <li>Удаление и добавление игр в библиотеку</li>
+   <li>Мониторинг цен на игры в различных регионах</li>
+   <li>Просмотр игр от определенного издателя</li>
+   <li>Создание коллекций игр по выбранной категории</li>
+</o>
+<h2>Использованные технологии</h2>
+<o><li>Java 17</li>
+   <li>Maven</li>
+   <li>Spring Boot</li>
+   <li>Spring Web</li>
+   <li>REST API</li></o>
+<h2>REST API</h2>
+<p>Поддержка HTTP метода GET c Query и Path Parametrs</p> </ol><h2>Примеры запросов к API</h2> <p>Ниже приведены примеры запросов к API:</p><h3>Поиск игры по названию</h3> <pre><code>GET /games?title=НазваниеИгры</code></pre> <p>Пример:</p> <pre><code>GET /games?title=The Witcher 3</code></pre><h3>Поиск игры по информации о компании</h3> <pre><code>GET /games?company=НазваниеКомпании</code></pre> <p>Пример:</p> <pre><code>GET /games?company=CD Projekt Red</code></pre><h3>Добавление игры в библиотеку</h3> <pre><code>POST /games Content-Type: application/json
 {
 "title": "НазваниеИгры",
 "company": "НазваниеКомпании",
