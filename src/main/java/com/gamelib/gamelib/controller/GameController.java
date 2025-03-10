@@ -27,12 +27,15 @@ public class GameController {
 
     @GetMapping("/search")
     public ResponseEntity<Game> getGameByQuery(@RequestParam String title) {
-        Game game = service.getGameByTitle(title);
-        return game != null ? ResponseEntity.ok(game) : ResponseEntity.notFound().build();
+        return getGameResponse(title);
     }
 
     @GetMapping("/{title}")
     public ResponseEntity<Game> getGameByPath(@PathVariable String title) {
+        return getGameResponse(title);
+    }
+
+    private ResponseEntity<Game> getGameResponse(String title) {
         Game game = service.getGameByTitle(title);
         return game != null ? ResponseEntity.ok(game) : ResponseEntity.notFound().build();
     }
