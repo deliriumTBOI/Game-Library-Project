@@ -14,6 +14,7 @@ public class GameRepository {
         games.add(new Game("The Witcher 3", new Company("CD Projekt Red", "Poland")));
         games.add(new Game("Cyberpunk 2077", new Company("CD Projekt Red", "Poland")));
         games.add(new Game("God of War", new Company("Santa Monica Studio", "USA")));
+        //games.add(new Game("The Binding Of Isaac", new Company("Nicalis", "USA")));
     }
 
     public List<Game> findAll() {
