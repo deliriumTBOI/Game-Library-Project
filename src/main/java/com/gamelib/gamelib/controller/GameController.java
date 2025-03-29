@@ -1,43 +1,64 @@
 package com.gamelib.gamelib.controller;
 
+import com.gamelib.gamelib.dto.GameDto;
 import com.gamelib.gamelib.model.Game;
 import com.gamelib.gamelib.service.GameService;
-import java.util.List;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/games")
 public class GameController {
-    private final GameService service;
+    private final GameService gameService;
 
-    public GameController(GameService service) {
-        this.service = service;
+    public GameController(GameService gameService) {
+        this.gameService = gameService;
     }
 
+    // Получить все игры
     @GetMapping
-    public List<Game> getAllGames() {
-        return service.getAllGames();
+    public List<GameDto> getAllGames() {
+        return gameService.getAllGames();
     }
 
-    @GetMapping("/search")
-    public ResponseEntity<Game> getGameByQuery(@RequestParam String title) {
-        Game game = service.getGameByTitle(title);
-        return game != null ? ResponseEntity.ok(game) : ResponseEntity.notFound().build();
-    }
-
+    // Получить игру по ID
     @GetMapping("/{id}")
-    public ResponseEntity<Game> getGameById(@PathVariable Long id) {
-        Game game = service.getGameById(id);
-        return game != null ? ResponseEntity.ok(game) : ResponseEntity.notFound().build();
+    public ResponseEntity<GameDto> getGameById(@PathVariable Long id) {
+        return gameService.getGameById(id)
+                .map(game -> ResponseEntity.ok(new GameDto(game)))
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @GetMapping("/company")
-    public List<Game> getGamesByCompany(@RequestParam String name) {
-        return service.getGamesByCompanyName(name);
+    // Добавить новую игру
+    @PostMapping
+    public ResponseEntity<GameDto> createGame(@RequestBody GameDto gameDto) {
+        Game createdGame = gameService.createGame(gameDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(new GameDto(createdGame));
+    }
+
+    // Обновить игру
+    @PutMapping("/{id}")
+    public ResponseEntity<GameDto> updateGame(@PathVariable Long id, @RequestBody GameDto gameDto) {
+        Game updatedGame = gameService.updateGame(id, gameDto);
+        return updatedGame != null ? ResponseEntity.ok(new GameDto(updatedGame)) :
+                ResponseEntity.notFound().build();
+    }
+
+    // Частичное обновление игры (PATCH)
+    @PatchMapping("/{id}")
+    public ResponseEntity<GameDto> patchGame(@PathVariable Long id, @RequestBody GameDto gameDto) {
+        Game updatedGame = gameService.patchGame(id, gameDto);
+        return updatedGame != null ? ResponseEntity.ok(new GameDto(updatedGame)) :
+                ResponseEntity.notFound().build();
+    }
+
+    // Удалить игру
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteGame(@PathVariable Long id) {
+        boolean isDeleted = gameService.deleteGame(id);
+        return isDeleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
     }
 }
