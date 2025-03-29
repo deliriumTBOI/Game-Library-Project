@@ -1,5 +1,6 @@
 package com.gamelib.gamelib.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import java.util.Set;
 
@@ -16,6 +17,7 @@ public class Company {
     private String country;
 
     @ManyToMany(mappedBy = "companies", fetch = FetchType.LAZY)
+    //@JsonBackReference
     private Set<Game> games;
 
     // Конструкторы

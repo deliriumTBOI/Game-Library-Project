@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.util.Set;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 @Entity
 @Table(name = "game")
@@ -23,7 +24,7 @@ public class Game {
 
     @NotNull(message = "Update date cannot be null") // Проверка на null
     @Column(name = "update_date", nullable = false) // Указание на столбец с именем "update_date"
-    private LocalDate upDate;
+    private LocalDate updateDate;
 
     @NotNull(message = "Average online cannot be null") // Проверка на null
     @Column(name = "average_online", nullable = false) // Указание на столбец с именем "average_online"
@@ -38,6 +39,7 @@ public class Game {
             joinColumns = @JoinColumn(name = "game_id"),
             inverseJoinColumns = @JoinColumn(name = "company_id")
     )
+    //@JsonManagedReference
     private Set<Company> companies;
 
     @OneToMany(mappedBy = "game", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -45,10 +47,10 @@ public class Game {
 
     // Конструкторы
 
-    public Game(String title, LocalDate releaseDate, LocalDate upDate, int avgOnline, int reviewsSum, Set<Company> companies) {
+    public Game(String title, LocalDate releaseDate, LocalDate updateDate, int avgOnline, int reviewsSum, Set<Company> companies) {
         this.title = title;
         this.releaseDate = releaseDate;
-        this.upDate = upDate;
+        this.updateDate = updateDate;
         this.avgOnline = avgOnline;
         this.reviewsSum = reviewsSum;
         this.companies = companies;
@@ -70,8 +72,8 @@ public class Game {
         return releaseDate;
     }
 
-    public LocalDate getUpDate() {
-        return upDate;
+    public LocalDate getUpdateDate() {
+        return updateDate;
     }
 
     public int getAvgOnline() {
@@ -103,8 +105,8 @@ public class Game {
         this.releaseDate = releaseDate;
     }
 
-    public void setUpDate(LocalDate upDate) {
-        this.upDate = upDate;
+    public void setUpdateDate(LocalDate updateDate) {
+        this.updateDate = updateDate;
     }
 
     public void setAvgOnline(int avgOnline) {
