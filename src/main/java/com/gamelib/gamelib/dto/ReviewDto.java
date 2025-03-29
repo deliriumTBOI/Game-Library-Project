@@ -7,7 +7,7 @@ public class ReviewDto {
     private String content;
     private int rating;
     private Long gameId; // ID игры, к которой относится отзыв
-
+//
     public ReviewDto() {
     }
     

@@ -15,7 +15,7 @@ public class Game {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
+//
     @NotBlank(message = "Title cannot be blank") // Проверка на пустое значение
     @Column(nullable = false) // Указание, что столбец не может быть null в базе данных
     private String title;

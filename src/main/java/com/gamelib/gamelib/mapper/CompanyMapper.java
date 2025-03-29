@@ -5,7 +5,7 @@ import com.gamelib.gamelib.model.Company;
 import com.gamelib.gamelib.model.Game;
 import java.util.stream.Collectors;
 import java.util.Collections;
-
+//
 public class CompanyMapper {
     public static CompanyDto toDto(Company company) {
         CompanyDto dto = new CompanyDto();

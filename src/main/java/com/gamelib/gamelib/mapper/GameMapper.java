@@ -51,7 +51,7 @@ public class GameMapper {
         }
         return game;
     }
-
+//
     public static Game patchEntity(Game game, GameDto dto, CompanyRepository companyRepository) {
         if (dto.getTitle() != null) game.setTitle(dto.getTitle());
         if (dto.getReleaseDate() != null) game.setReleaseDate(dto.getReleaseDate());

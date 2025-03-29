@@ -28,7 +28,7 @@ public class CompanyService {
         return companyRepository.findById(id)
                 .map(CompanyDto::new);
     }
-
+//
     public List<CompanyDto> getCompaniesByNameWithGames(String name) {
         return companyRepository.findByNameContainingIgnoreCase(name).stream()
                 .map(CompanyDto::new)

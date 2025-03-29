@@ -17,7 +17,7 @@ public class Review {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "game_id", nullable = false)
     private Game game; // Игра, к которой относится отзыв
-
+//
     // Конструкторы
     public Review() {
     }

@@ -25,7 +25,7 @@ public class GameController {
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
-
+//
     @GetMapping
     public ResponseEntity<List<GameDto>> getGames(@RequestParam(value = "title", required = false) String title) {
         if (title != null) {

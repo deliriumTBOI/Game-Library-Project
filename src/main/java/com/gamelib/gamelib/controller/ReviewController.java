@@ -38,7 +38,7 @@ public class ReviewController {
         Review createdReview = reviewService.createReview(reviewDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(new ReviewDto(createdReview));
     }
-
+//
     // Обновить отзыв
     @PutMapping("/{id}")
     public ResponseEntity<ReviewDto> updateReview(@PathVariable Long id, @RequestBody ReviewDto reviewDto) {

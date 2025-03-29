@@ -33,7 +33,7 @@ public class CompanyDto {
                 : Collections.emptySet(); // Безопасная обработка null
     }
 
-
+//
 
     // Геттеры
     public Long getId() {
