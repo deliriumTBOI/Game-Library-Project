@@ -5,7 +5,10 @@ import com.gamelib.gamelib.model.Company;
 import com.gamelib.gamelib.model.Game;
 import com.gamelib.gamelib.repository.CompanyRepository; // Импортируйте CompanyRepository
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class GameMapper {
 
@@ -17,9 +20,10 @@ public class GameMapper {
         dto.setUpdateDate(game.getUpdateDate());
         dto.setAvgOnline(game.getAvgOnline());
         dto.setReviewsSum(game.getReviewsSum());
-        // Преобразование Set<Company> в List<Long> companyIds выполняется в конструкторе GameDto
         if (game.getCompanies() != null) {
-            dto.setCompanyIds(game.getCompanies().stream().map(Company::getId).toList());
+            dto.setCompanies(game.getCompanies().stream()
+                    .map(company -> Map.of("id", company.getId()))
+                    .collect(Collectors.toList()));
         }
         return dto;
     }
@@ -35,10 +39,13 @@ public class GameMapper {
         game.setUpdateDate(dto.getUpdateDate());
         game.setAvgOnline(dto.getAvgOnline());
         game.setReviewsSum(dto.getReviewsSum());
-        if (dto.getCompanyIds() != null && !dto.getCompanyIds().isEmpty()) {
+        if (dto.getCompanies() != null && !dto.getCompanies().isEmpty()) {
             Set<Company> companies = new HashSet<>();
-            for (Long companyId : dto.getCompanyIds()) {
-                companyRepository.findById(companyId).ifPresent(companies::add);
+            for (Map<String, Long> companyMap : dto.getCompanies()) {
+                Long companyId = companyMap.get("id");
+                if (companyId != null) {
+                    companyRepository.findById(companyId).ifPresent(companies::add);
+                }
             }
             game.setCompanies(companies);
         }
@@ -51,11 +58,13 @@ public class GameMapper {
         if (dto.getUpdateDate() != null) game.setUpdateDate(dto.getUpdateDate());
         if (dto.getAvgOnline() > 0) game.setAvgOnline(dto.getAvgOnline());
         if (dto.getReviewsSum() > 0) game.setReviewsSum(dto.getReviewsSum());
-        // Аналогично updateEntity, можно добавить логику для обновления компаний
-        if (dto.getCompanyIds() != null) {
+        if (dto.getCompanies() != null) {
             Set<Company> companies = new HashSet<>();
-            for (Long companyId : dto.getCompanyIds()) {
-                companyRepository.findById(companyId).ifPresent(companies::add);
+            for (Map<String, Long> companyMap : dto.getCompanies()) {
+                Long companyId = companyMap.get("id");
+                if (companyId != null) {
+                    companyRepository.findById(companyId).ifPresent(companies::add);
+                }
             }
             game.setCompanies(companies);
         }

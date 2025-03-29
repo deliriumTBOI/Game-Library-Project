@@ -5,6 +5,9 @@ import jakarta.persistence.*;
 import java.util.Set;
 
 @Entity
+@Table(name = "company")
+@NamedEntityGraph(name = "company-with-games",
+        attributeNodes = @NamedAttributeNode("games"))
 public class Company {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -2,31 +2,37 @@ package com.gamelib.gamelib.service;
 
 import com.gamelib.gamelib.dto.CompanyDto;
 import com.gamelib.gamelib.model.Company;
-import com.gamelib.gamelib.repository.CompanyRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import com.gamelib.gamelib.repository.CompanyRepository;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class CompanyService {
-
     private final CompanyRepository companyRepository;
 
     public CompanyService(CompanyRepository companyRepository) {
         this.companyRepository = companyRepository;
     }
 
-    // Получить все компании
-    public List<CompanyDto> getAllCompanies() {
+    public List<CompanyDto> getAllCompaniesWithGames() {
         return companyRepository.findAll().stream()
-                .map(CompanyDto::new)  // преобразуем Company в CompanyDto
+                .map(CompanyDto::new)
                 .collect(Collectors.toList());
     }
 
-    // Получить компанию по ID
-    public Optional<Company> getCompanyById(Long id) {
-        return companyRepository.findById(id);
+    public Optional<CompanyDto> getCompanyByIdWithGames(Long id) {
+        return companyRepository.findById(id)
+                .map(CompanyDto::new);
+    }
+
+    public List<CompanyDto> getCompaniesByNameWithGames(String name) {
+        return companyRepository.findByNameContainingIgnoreCase(name).stream()
+                .map(CompanyDto::new)
+                .collect(Collectors.toList());
     }
 
     // Создать новую компанию

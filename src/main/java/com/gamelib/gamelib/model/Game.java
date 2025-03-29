@@ -9,6 +9,8 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 @Entity
 @Table(name = "game")
+@NamedEntityGraph(name = "game-with-companies",
+        attributeNodes = @NamedAttributeNode("companies"))
 public class Game {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

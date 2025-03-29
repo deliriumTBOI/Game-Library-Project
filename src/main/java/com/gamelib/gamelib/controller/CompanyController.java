@@ -19,17 +19,19 @@ public class CompanyController {
         this.companyService = companyService;
     }
 
-    // Получить все компании
     @GetMapping
-    public List<CompanyDto> getAllCompanies() {
-        return companyService.getAllCompanies();
+    public List<CompanyDto> getAllCompaniesWithGames(@RequestParam(value = "name", required = false) String name) {
+        if (name != null) {
+            return companyService.getCompaniesByNameWithGames(name);
+        } else {
+            return companyService.getAllCompaniesWithGames();
+        }
     }
 
-    // Получить компанию по ID
     @GetMapping("/{id}")
-    public ResponseEntity<CompanyDto> getCompanyById(@PathVariable Long id) {
-        return companyService.getCompanyById(id)
-                .map(company -> ResponseEntity.ok(new CompanyDto(company)))
+    public ResponseEntity<CompanyDto> getCompanyByIdWithGames(@PathVariable Long id) {
+        return companyService.getCompanyByIdWithGames(id)
+                .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 

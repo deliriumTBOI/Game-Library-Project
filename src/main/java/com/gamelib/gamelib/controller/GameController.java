@@ -18,18 +18,23 @@ public class GameController {
         this.gameService = gameService;
     }
 
-    // Получить все игры
-    @GetMapping
-    public List<GameDto> getAllGames() {
-        return gameService.getAllGames();
-    }
-
     // Получить игру по ID
     @GetMapping("/{id}")
     public ResponseEntity<GameDto> getGameById(@PathVariable Long id) {
         return gameService.getGameById(id)
-                .map(game -> ResponseEntity.ok(new GameDto(game)))
+                .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @GetMapping
+    public ResponseEntity<List<GameDto>> getGames(@RequestParam(value = "title", required = false) String title) {
+        if (title != null) {
+            List<GameDto> games = gameService.getGamesByTitle(title);
+            return ResponseEntity.ok(games);
+        } else {
+            List<GameDto> games = gameService.getAllGames();
+            return ResponseEntity.ok(games);
+        }
     }
 
     // Добавить новую игру

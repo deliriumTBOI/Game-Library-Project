@@ -3,7 +3,7 @@ package com.gamelib.gamelib.service;
 import com.gamelib.gamelib.dto.GameDto;
 import com.gamelib.gamelib.model.Company;
 import com.gamelib.gamelib.model.Game;
-import com.gamelib.gamelib.repository.CompanyRepository; // Убедитесь, что у вас есть CompanyRepository
+import com.gamelib.gamelib.repository.CompanyRepository;
 import com.gamelib.gamelib.repository.GameRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
@@ -11,7 +11,10 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class GameService {
@@ -24,11 +27,20 @@ public class GameService {
     }
 
     public List<GameDto> getAllGames() {
-        return gameRepository.findAll().stream().map(GameDto::new).toList();
+        return gameRepository.findAllWithCompaniesGraph().stream()
+                .map(GameDto::new)
+                .collect(Collectors.toList());
     }
 
-    public java.util.Optional<Game> getGameById(Long id) {
-        return gameRepository.findById(id);
+    public Optional<GameDto> getGameById(Long id) {
+        return gameRepository.findByIdWithCompaniesGraph(id)
+                .map(GameDto::new);
+    }
+
+    public List<GameDto> getGamesByTitle(String title) {
+        return gameRepository.findByTitleContainingIgnoreCase(title).stream()
+                .map(GameDto::new)
+                .collect(Collectors.toList());
     }
 
     @Transactional
@@ -46,17 +58,19 @@ public class GameService {
             game.setUpdateDate(LocalDate.now());
         }
 
-        if (gameDto.getCompanyIds() != null && !gameDto.getCompanyIds().isEmpty()) {
+        if (gameDto.getCompanies() != null && !gameDto.getCompanies().isEmpty()) {
             Set<Company> companies = new HashSet<>();
-            for (Long companyId : gameDto.getCompanyIds()) {
-                companyRepository.findById(companyId).ifPresent(company -> {
-                    companies.add(company);
-                    // Обновляем другую сторону связи
-                    if (company.getGames() == null) {
-                        company.setGames(new HashSet<>());
-                    }
-                    company.getGames().add(game);
-                });
+            for (Map<String, Long> companyMap : gameDto.getCompanies()) {
+                Long companyId = companyMap.get("id");
+                if (companyId != null) {
+                    companyRepository.findById(companyId).ifPresent(company -> {
+                        companies.add(company);
+                        if (company.getGames() == null) {
+                            company.setGames(new HashSet<>());
+                        }
+                        company.getGames().add(game);
+                    });
+                }
             }
             game.setCompanies(companies);
         }
@@ -73,7 +87,22 @@ public class GameService {
                     existingGame.setUpdateDate(gameDto.getUpdateDate());
                     existingGame.setAvgOnline(gameDto.getAvgOnline());
                     existingGame.setReviewsSum(gameDto.getReviewsSum());
-                    // Обновление связей с компаниями аналогично createGame, если необходимо
+
+                    existingGame.getCompanies().clear(); // Очищаем существующие связи
+                    if (gameDto.getCompanies() != null && !gameDto.getCompanies().isEmpty()) {
+                        for (Map<String, Long> companyMap : gameDto.getCompanies()) {
+                            Long companyId = companyMap.get("id");
+                            if (companyId != null) {
+                                companyRepository.findById(companyId).ifPresent(company -> {
+                                    existingGame.getCompanies().add(company);
+                                    if (company.getGames() == null) {
+                                        company.setGames(new HashSet<>());
+                                    }
+                                    company.getGames().add(existingGame);
+                                });
+                            }
+                        }
+                    }
                     return gameRepository.save(existingGame);
                 })
                 .orElse(null);
@@ -88,7 +117,22 @@ public class GameService {
                     if (gameDto.getUpdateDate() != null) existingGame.setUpdateDate(gameDto.getUpdateDate());
                     if (gameDto.getAvgOnline() > 0) existingGame.setAvgOnline(gameDto.getAvgOnline());
                     if (gameDto.getReviewsSum() > 0) existingGame.setReviewsSum(gameDto.getReviewsSum());
-                    // Обновление связей с компаниями аналогично createGame, если необходимо
+
+                    if (gameDto.getCompanies() != null) {
+                        existingGame.getCompanies().clear(); // Очищаем существующие связи
+                        for (Map<String, Long> companyMap : gameDto.getCompanies()) {
+                            Long companyId = companyMap.get("id");
+                            if (companyId != null) {
+                                companyRepository.findById(companyId).ifPresent(company -> {
+                                    existingGame.getCompanies().add(company);
+                                    if (company.getGames() == null) {
+                                        company.setGames(new HashSet<>());
+                                    }
+                                    company.getGames().add(existingGame);
+                                });
+                            }
+                        }
+                    }
                     return gameRepository.save(existingGame);
                 })
                 .orElse(null);

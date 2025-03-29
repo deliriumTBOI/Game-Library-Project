@@ -1,10 +1,10 @@
 package com.gamelib.gamelib.dto;
 
-import com.gamelib.gamelib.model.Company;
 import com.gamelib.gamelib.model.Game;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class GameDto {
     private Long id;
@@ -13,22 +13,20 @@ public class GameDto {
     private LocalDate updateDate;
     private int avgOnline;
     private int reviewsSum;
-    // Убираем поле с полными объектами Company
-    // private Set<Company> companies;
-    private List<Long> companyIds; // Добавляем поле для ID компаний
+    private List<Map<String, Long>> companies;
 
     // Конструкторы
     public GameDto() {
     }
 
-    public GameDto(Long id, String title, LocalDate releaseDate, LocalDate updateDate, int avgOnline, int reviewsSum, List<Long> companyIds) {
+    public GameDto(Long id, String title, LocalDate releaseDate, LocalDate updateDate, int avgOnline, int reviewsSum, List<Map<String, Long>> companies) {
         this.id = id;
         this.title = title;
         this.releaseDate = releaseDate;
         this.updateDate = updateDate;
         this.avgOnline = avgOnline;
         this.reviewsSum = reviewsSum;
-        this.companyIds = companyIds;
+        this.companies = companies;
     }
 
     public GameDto(Game game) {
@@ -38,9 +36,10 @@ public class GameDto {
         this.updateDate = game.getUpdateDate();
         this.avgOnline = game.getAvgOnline();
         this.reviewsSum = game.getReviewsSum();
-        // Вместо прямого копирования компаний, можно преобразовать их ID в список
         if (game.getCompanies() != null) {
-            this.companyIds = game.getCompanies().stream().map(Company::getId).toList();
+            this.companies = game.getCompanies().stream()
+                    .map(company -> Map.of("id", company.getId()))
+                    .collect(Collectors.toList());
         }
     }
 
@@ -69,13 +68,8 @@ public class GameDto {
         return reviewsSum;
     }
 
-    // Убираем геттер для полных объектов Company
-    // public Set<Company> getCompanies() {
-    //     return companies;
-    // }
-
-    public List<Long> getCompanyIds() {
-        return companyIds;
+    public List<Map<String, Long>> getCompanies() {
+        return companies;
     }
 
     // Сеттеры
@@ -91,8 +85,8 @@ public class GameDto {
         this.releaseDate = releaseDate;
     }
 
-    public void setUpdateDate(LocalDate upDate) {
-        this.updateDate = upDate;
+    public void setUpdateDate(LocalDate updateDate) {
+        this.updateDate = updateDate;
     }
 
     public void setAvgOnline(int avgOnline) {
@@ -103,12 +97,7 @@ public class GameDto {
         this.reviewsSum = reviewsSum;
     }
 
-    // Убираем сеттер для полных объектов Company
-    // public void setCompanies(Set<Company> companies) {
-    //     this.companies = companies;
-    // }
-
-    public void setCompanyIds(List<Long> companyIds) {
-        this.companyIds = companyIds;
+    public void setCompanies(List<Map<String, Long>> companies) {
+        this.companies = companies;
     }
 }
