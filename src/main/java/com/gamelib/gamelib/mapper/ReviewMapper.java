@@ -9,8 +9,9 @@ public class ReviewMapper {
         dto.setId(review.getId());
         dto.setContent(review.getContent());
         dto.setRating(review.getRating());
-        dto.setGameId(review.getGame().getId());
+        if (review.getGame() != null) {
+            dto.setGameId(review.getGame().getId());
+        }
         return dto;
     }
 }
-//

@@ -25,7 +25,12 @@ public class GameMapper {
                     .map(company -> company.getName()) // Извлекаем название компании
                     .collect(Collectors.toList()));
         }
+        // Добавляем маппинг для отзывов
+        if (game.getReviews() != null) {
+            dto.setReviews(game.getReviews().stream()
+                    .map(review -> review.getContent()) // Извлекаем содержимое отзыва
+                    .collect(Collectors.toList()));
+        }
         return dto;
     }
 }
-

@@ -4,18 +4,23 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 @Entity
 @Table(name = "game")
-@NamedEntityGraph(name = "game-with-companies",
-        attributeNodes = @NamedAttributeNode("companies"))
+@NamedEntityGraphs({
+        @NamedEntityGraph(name = "game-with-companies",
+                attributeNodes = @NamedAttributeNode("companies")),
+        @NamedEntityGraph(name = "game-with-reviews", // Определяем новый EntityGraph для отзывов
+                attributeNodes = @NamedAttributeNode("reviews"))
+})
 public class Game {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-//
+    //
     @NotBlank(message = "Title cannot be blank") // Проверка на пустое значение
     @Column(nullable = false) // Указание, что столбец не может быть null в базе данных
     private String title;
@@ -33,7 +38,7 @@ public class Game {
     private int avgOnline;
 
     @Column(name = "reviews_amount", nullable = false) // Указание на столбец с именем "reviews_amount"
-    private int reviewsSum;
+    private int reviewsSum = 0; // Инициализируем значение по умолчанию
 
     @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY)
     @JoinTable(
@@ -44,7 +49,7 @@ public class Game {
     //@JsonManagedReference
     private Set<Company> companies;
 
-    @OneToMany(mappedBy = "game", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "game", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private Set<Review> reviews;
 
     // Конструкторы
@@ -69,7 +74,7 @@ public class Game {
     public String getTitle() {
         return title;
     }
-    
+
     public LocalDate getReleaseDate() {
         return releaseDate;
     }
@@ -115,9 +120,7 @@ public class Game {
         this.avgOnline = avgOnline;
     }
 
-    public void setReviewsSum(int reviewsSum) {
-        this.reviewsSum = reviewsSum;
-    }
+    // Непосредственно устанавливать reviewsSum больше не нужно, будем обновлять через коллекцию reviews
 
     public void setCompanies(Set<Company> companies) {
         this.companies = companies;
@@ -125,5 +128,28 @@ public class Game {
 
     public void setReviews(Set<Review> reviews) {
         this.reviews = reviews;
+        this.reviewsSum = (reviews != null) ? reviews.size() : 0;
+    }
+
+    // Методы для управления отзывами и автоматического обновления reviewsSum
+    public void addReview(Review review) {
+        if (this.reviews == null) {
+            this.reviews = new HashSet<>();
+        }
+        this.reviews.add(review);
+        review.setGame(this); // Устанавливаем связь с игрой
+        this.reviewsSum = this.reviews.size(); // Обновляем счетчик
+    }
+
+    public void removeReview(Review review) {
+        if (this.reviews != null) {
+            this.reviews.remove(review);
+            review.setGame(null); // Удаляем связь
+            this.reviewsSum = this.reviews.size(); // Обновляем счетчик
+        }
+    }
+
+    public void setReviewsSum(int reviewsSum) {
+        this.reviewsSum = reviewsSum;
     }
 }

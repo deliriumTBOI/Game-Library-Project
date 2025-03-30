@@ -1,59 +1,86 @@
 package com.gamelib.gamelib.service;
 
-import com.gamelib.gamelib.dto.ReviewDto;
+import com.gamelib.gamelib.model.Game;
 import com.gamelib.gamelib.model.Review;
+import com.gamelib.gamelib.repository.GameRepository;
 import com.gamelib.gamelib.repository.ReviewRepository;
+import jakarta.transaction.Transactional;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class ReviewService {
 
     private final ReviewRepository reviewRepository;
+    private final GameRepository gameRepository;
 
-    public ReviewService(ReviewRepository reviewRepository) {
+    public ReviewService(ReviewRepository reviewRepository, GameRepository gameRepository) {
         this.reviewRepository = reviewRepository;
+        this.gameRepository = gameRepository;
     }
 
-    // Получить все отзывы
-    public List<ReviewDto> getAllReviews() {
-        return reviewRepository.findAll().stream()
-                .map(ReviewDto::new)  // преобразуем Review в ReviewDto
-                .collect(Collectors.toList());
+    // Создание отзыва
+    @Transactional
+    public Review createReview(Long gameId, Review review) {
+        Optional<Game> gameOptional = gameRepository.findById(gameId);
+        if (gameOptional.isPresent()) {
+            Game game = gameOptional.get();
+            review.setGame(game);
+            return reviewRepository.save(review);
+        } else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Игра с ID " + gameId + " не найдена");
+        }
     }
 
-    // Получить отзыв по ID
+    // Чтение отзыва по ID
     public Optional<Review> getReviewById(Long id) {
         return reviewRepository.findById(id);
     }
 
-    // Создать новый отзыв
-    public Review createReview(ReviewDto reviewDto) {
-        // Поскольку ReviewDto содержит только ID игры, нам нужно получить саму игру
-        Review review = new Review(reviewDto.getContent(), reviewDto.getRating(), null); // Значение Game установится позже
-        return reviewRepository.save(review);
-    }
-
-    // Обновить отзыв
-    public Review updateReview(Long id, ReviewDto reviewDto) {
-        return reviewRepository.findById(id)
-                .map(review -> {
-                    review.setContent(reviewDto.getContent());
-                    review.setRating(reviewDto.getRating());
-                    return reviewRepository.save(review);
-                })
-                .orElse(null);  // если отзыв не найден, вернуть null
-    }
-
-    // Удалить отзыв
-    public boolean deleteReview(Long id) {
-        if (reviewRepository.existsById(id)) {
-            reviewRepository.deleteById(id);
-            return true;
+    // Чтение всех отзывов для определенной игры
+    public List<Review> getReviewsByGameId(Long gameId) {
+        Optional<Game> gameOptional = gameRepository.findById(gameId);
+        if (gameOptional.isPresent()) {
+            return reviewRepository.findByGameId(gameId);
+        } else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Игра с ID " + gameId + " не найдена");
         }
-        return false;
+    }
+
+    // Обновление отзыва
+    @Transactional
+    public Review updateReview(Long id, Review updatedReview) {
+        return reviewRepository.findById(id)
+                .map(existingReview -> {
+                    if (updatedReview.getContent() != null) {
+                        existingReview.setContent(updatedReview.getContent());
+                    }
+                    if (updatedReview.getRating() != 0) { // Предполагаем, что 0 не является валидным обновлением рейтинга
+                        existingReview.setRating(updatedReview.getRating());
+                    }
+                    return reviewRepository.save(existingReview);
+                })
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Отзыв с ID " + id + " не найден"));
+    }
+
+    // Удаление отзыва
+    @Transactional
+    public void deleteReview(Long id) {
+        Optional<Review> reviewOptional = reviewRepository.findById(id);
+        if (reviewOptional.isPresent()) {
+            Review review = reviewOptional.get();
+            Game game = review.getGame();
+            if (game != null) {
+                game.removeReview(review); // Обновляем счетчик отзывов в игре
+                gameRepository.save(game);
+            }
+            reviewRepository.deleteById(id);
+        } else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Отзыв с ID " + id + " не найден");
+        }
     }
 }

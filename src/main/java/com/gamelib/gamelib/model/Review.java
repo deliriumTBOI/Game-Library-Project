@@ -22,10 +22,9 @@ public class Review {
     public Review() {
     }
 
-    public Review(String content, int rating, Game game) {
+    public Review(String content, int rating) {
         this.content = content;
         this.rating = rating;
-        this.game = game;
     }
 
     // Геттеры и сеттеры
@@ -59,5 +58,8 @@ public class Review {
 
     public void setGame(Game game) {
         this.game = game;
+        if (game != null && !game.getReviews().contains(this)) {
+            game.addReview(this); // Обеспечиваем двустороннюю связь при установке игры
+        }
     }
 }

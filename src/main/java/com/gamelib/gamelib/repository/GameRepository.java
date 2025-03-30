@@ -24,5 +24,9 @@ public interface GameRepository extends JpaRepository<Game, Long>, JpaSpecificat
     @Query("SELECT g FROM Game g WHERE LOWER(g.title) LIKE LOWER(CONCAT('%', :title, '%'))")
     List<Game> findByTitleContainingIgnoreCase(@Param("title") String title);
 
+    @EntityGraph(value = "game-with-reviews", type = EntityGraph.EntityGraphType.LOAD)
+    @Query("SELECT g FROM Game g") // Явно указываем JPQL-запрос
+    List<Game> findAllWithReviews();
+
     boolean existsByTitle(String title);
 }

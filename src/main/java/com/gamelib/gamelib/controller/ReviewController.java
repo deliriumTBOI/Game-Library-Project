@@ -1,56 +1,59 @@
 package com.gamelib.gamelib.controller;
 
-import com.gamelib.gamelib.dto.ReviewDto;
 import com.gamelib.gamelib.model.Review;
+import com.gamelib.gamelib.dto.ReviewDto;
+import com.gamelib.gamelib.mapper.ReviewMapper;
 import com.gamelib.gamelib.service.ReviewService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
-@RequestMapping("/reviews")
+@RequestMapping("/games/{gameId}/reviews")
 public class ReviewController {
     private final ReviewService reviewService;
 
     public ReviewController(ReviewService reviewService) {
         this.reviewService = reviewService;
+        // Внедрите ReviewMapper
     }
 
-    // Получить все отзывы
-    @GetMapping
-    public List<ReviewDto> getAllReviews() {
-        return reviewService.getAllReviews();
-    }
-
-    // Получить отзыв по ID
-    @GetMapping("/{id}")
-    public ResponseEntity<ReviewDto> getReviewById(@PathVariable Long id) {
-        return reviewService.getReviewById(id)
-                .map(review -> ResponseEntity.ok(new ReviewDto(review)))
-                .orElseGet(() -> ResponseEntity.notFound().build());
-    }
-
-    // Добавить новый отзыв
+    // Создание отзыва для игры
     @PostMapping
-    public ResponseEntity<ReviewDto> createReview(@RequestBody ReviewDto reviewDto) {
-        Review createdReview = reviewService.createReview(reviewDto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(new ReviewDto(createdReview));
-    }
-//
-    // Обновить отзыв
-    @PutMapping("/{id}")
-    public ResponseEntity<ReviewDto> updateReview(@PathVariable Long id, @RequestBody ReviewDto reviewDto) {
-        Review updatedReview = reviewService.updateReview(id, reviewDto);
-        return updatedReview != null ? ResponseEntity.ok(new ReviewDto(updatedReview)) :
-                ResponseEntity.notFound().build();
+    public ResponseEntity<ReviewDto> createReview(@PathVariable Long gameId, @RequestBody Review review) {
+        Review createdReview = reviewService.createReview(gameId, review);
+        return new ResponseEntity<>(ReviewMapper.toDto(createdReview), HttpStatus.CREATED);
     }
 
-    // Удалить отзыв
+    // Получение отзыва по ID
+    @GetMapping("/{id}")
+    public ResponseEntity<Review> getReviewById(@PathVariable Long id) { // Измените тип возвращаемого значения здесь
+        Optional<Review> review = reviewService.getReviewById(id);
+        return review.map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    // Получение всех отзывов для определенной игры
+    @GetMapping
+    public ResponseEntity<List<Review>> getReviewsByGameId(@PathVariable Long gameId) {
+        List<Review> reviews = reviewService.getReviewsByGameId(gameId);
+        return new ResponseEntity<>(reviews, HttpStatus.OK);
+    }
+
+    // Обновление отзыва
+    @PutMapping("/{id}")
+    public ResponseEntity<Review> updateReview(@PathVariable Long id, @RequestBody Review updatedReview) {
+        Review review = reviewService.updateReview(id, updatedReview);
+        return new ResponseEntity<>(review, HttpStatus.OK);
+    }
+
+    // Удаление отзыва
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteReview(@PathVariable Long id) {
-        boolean isDeleted = reviewService.deleteReview(id);
-        return isDeleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+        reviewService.deleteReview(id);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }

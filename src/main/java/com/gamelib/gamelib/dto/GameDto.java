@@ -1,6 +1,5 @@
 package com.gamelib.gamelib.dto;
 
-import com.gamelib.gamelib.model.Company;
 import com.gamelib.gamelib.model.Game;
 import java.time.LocalDate;
 import java.util.List;
@@ -11,9 +10,10 @@ public class GameDto {
     private String title;
     private LocalDate releaseDate;
     private LocalDate updateDate;
-    private Integer avgOnline;
-    private Integer reviewsSum;
+    private Integer avgOnline; // Изменили тип на Integer
+    private Integer reviewsSum; // Изменили тип на Integer
     private List<String> companies;
+    private List<String> reviews;
 
     public GameDto() {
     }
@@ -26,63 +26,76 @@ public class GameDto {
         this.avgOnline = game.getAvgOnline();
         this.reviewsSum = game.getReviewsSum();
         this.companies = game.getCompanies().stream()
-                .map(Company::getName)
+                .map(company -> company.getName())
+                .collect(Collectors.toList());
+        this.reviews = game.getReviews().stream()
+                .map(review -> review.getContent())
                 .collect(Collectors.toList());
     }
 
+    // Геттеры
     public Long getId() {
         return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public String getTitle() {
         return title;
     }
 
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
     public LocalDate getReleaseDate() {
         return releaseDate;
-    }
-
-    public void setReleaseDate(LocalDate releaseDate) {
-        this.releaseDate = releaseDate;
     }
 
     public LocalDate getUpdateDate() {
         return updateDate;
     }
 
-    public void setUpdateDate(LocalDate updateDate) {
-        this.updateDate = updateDate;
-    }
-
-    public Integer getAvgOnline() {
+    public Integer getAvgOnline() { // Изменили тип возвращаемого значения
         return avgOnline;
     }
 
-    public void setAvgOnline(Integer avgOnline) {
-        this.avgOnline = avgOnline;
-    }
-
-    public Integer getReviewsSum() {
+    public Integer getReviewsSum() { // Изменили тип возвращаемого значения
         return reviewsSum;
-    }
-
-    public void setReviewsSum(Integer reviewsSum) {
-        this.reviewsSum = reviewsSum;
     }
 
     public List<String> getCompanies() {
         return companies;
     }
 
+    public List<String> getReviews() {
+        return reviews;
+    }
+
+    // Сеттеры
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public void setReleaseDate(LocalDate releaseDate) {
+        this.releaseDate = releaseDate;
+    }
+
+    public void setUpdateDate(LocalDate updateDate) {
+        this.updateDate = updateDate;
+    }
+
+    public void setAvgOnline(Integer avgOnline) { // Изменили тип параметра
+        this.avgOnline = avgOnline;
+    }
+
+    public void setReviewsSum(Integer reviewsSum) { // Изменили тип параметра
+        this.reviewsSum = reviewsSum;
+    }
+
     public void setCompanies(List<String> companies) {
         this.companies = companies;
+    }
+
+    public void setReviews(List<String> reviews) {
+        this.reviews = reviews;
     }
 }
