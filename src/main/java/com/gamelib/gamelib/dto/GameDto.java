@@ -1,9 +1,10 @@
 package com.gamelib.gamelib.dto;
 
+import com.gamelib.gamelib.model.Company;
 import com.gamelib.gamelib.model.Game;
+import com.gamelib.gamelib.model.Review;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class GameDto {
     private Long id;
@@ -26,11 +27,11 @@ public class GameDto {
         this.avgOnline = game.getAvgOnline();
         this.reviewsSum = game.getReviewsSum();
         this.companies = game.getCompanies().stream()
-                .map(company -> company.getName())
-                .collect(Collectors.toList());
+                .map(Company::getName)
+                .toList();
         this.reviews = game.getReviews().stream()
-                .map(review -> review.getContent())
-                .collect(Collectors.toList());
+                .map(Review::getContent)
+                .toList();
     }
 
     // Геттеры
