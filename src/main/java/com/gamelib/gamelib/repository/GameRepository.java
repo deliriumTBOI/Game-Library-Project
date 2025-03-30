@@ -23,4 +23,6 @@ public interface GameRepository extends JpaRepository<Game, Long>, JpaSpecificat
     @EntityGraph(value = "game-with-companies", type = EntityGraph.EntityGraphType.LOAD)
     @Query("SELECT g FROM Game g WHERE LOWER(g.title) LIKE LOWER(CONCAT('%', :title, '%'))")
     List<Game> findByTitleContainingIgnoreCase(@Param("title") String title);
+
+    boolean existsByTitle(String title);
 }

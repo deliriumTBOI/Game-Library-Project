@@ -22,52 +22,10 @@ public class GameMapper {
         dto.setReviewsSum(game.getReviewsSum());
         if (game.getCompanies() != null) {
             dto.setCompanies(game.getCompanies().stream()
-                    .map(company -> Map.of("id", company.getId()))
+                    .map(company -> company.getName()) // Извлекаем название компании
                     .collect(Collectors.toList()));
         }
         return dto;
     }
-
-    public static Game toEntity(GameDto dto, CompanyRepository companyRepository) {
-        Game game = new Game();
-        return updateEntity(game, dto, companyRepository);
-    }
-
-    public static Game updateEntity(Game game, GameDto dto, CompanyRepository companyRepository) {
-        game.setTitle(dto.getTitle());
-        game.setReleaseDate(dto.getReleaseDate());
-        game.setUpdateDate(dto.getUpdateDate());
-        game.setAvgOnline(dto.getAvgOnline());
-        game.setReviewsSum(dto.getReviewsSum());
-        if (dto.getCompanies() != null && !dto.getCompanies().isEmpty()) {
-            Set<Company> companies = new HashSet<>();
-            for (Map<String, Long> companyMap : dto.getCompanies()) {
-                Long companyId = companyMap.get("id");
-                if (companyId != null) {
-                    companyRepository.findById(companyId).ifPresent(companies::add);
-                }
-            }
-            game.setCompanies(companies);
-        }
-        return game;
-    }
-//
-    public static Game patchEntity(Game game, GameDto dto, CompanyRepository companyRepository) {
-        if (dto.getTitle() != null) game.setTitle(dto.getTitle());
-        if (dto.getReleaseDate() != null) game.setReleaseDate(dto.getReleaseDate());
-        if (dto.getUpdateDate() != null) game.setUpdateDate(dto.getUpdateDate());
-        if (dto.getAvgOnline() > 0) game.setAvgOnline(dto.getAvgOnline());
-        if (dto.getReviewsSum() > 0) game.setReviewsSum(dto.getReviewsSum());
-        if (dto.getCompanies() != null) {
-            Set<Company> companies = new HashSet<>();
-            for (Map<String, Long> companyMap : dto.getCompanies()) {
-                Long companyId = companyMap.get("id");
-                if (companyId != null) {
-                    companyRepository.findById(companyId).ifPresent(companies::add);
-                }
-            }
-            game.setCompanies(companies);
-        }
-        return game;
-    }
 }
+

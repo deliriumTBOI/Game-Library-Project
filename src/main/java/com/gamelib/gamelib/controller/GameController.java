@@ -5,6 +5,7 @@ import com.gamelib.gamelib.model.Game;
 import com.gamelib.gamelib.service.GameService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,7 +26,7 @@ public class GameController {
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
-//
+
     @GetMapping
     public ResponseEntity<List<GameDto>> getGames(@RequestParam(value = "title", required = false) String title) {
         if (title != null) {
@@ -40,8 +41,16 @@ public class GameController {
     // Добавить новую игру
     @PostMapping
     public ResponseEntity<GameDto> createGame(@RequestBody GameDto gameDto) {
-        Game createdGame = gameService.createGame(gameDto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(new GameDto(createdGame));
+        try {
+            Game createdGame = gameService.createGame(gameDto);
+            return new ResponseEntity<>(new GameDto(createdGame), HttpStatus.CREATED);
+        } catch (RuntimeException e) {
+            if (e.getMessage().equals("Игра с таким названием уже существует.")) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
+            } else {
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Произошла внутренняя ошибка сервера");
+            }
+        }
     }
 
     // Обновить игру
@@ -55,9 +64,12 @@ public class GameController {
     // Частичное обновление игры (PATCH)
     @PatchMapping("/{id}")
     public ResponseEntity<GameDto> patchGame(@PathVariable Long id, @RequestBody GameDto gameDto) {
-        Game updatedGame = gameService.patchGame(id, gameDto);
-        return updatedGame != null ? ResponseEntity.ok(new GameDto(updatedGame)) :
-                ResponseEntity.notFound().build();
+        GameDto updatedGameDto = gameService.patchGame(id, gameDto); // Изменили тип переменной на GameDto
+        if (updatedGameDto != null) {
+            return new ResponseEntity<>(updatedGameDto, HttpStatus.OK); // Возвращаем GameDto
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
 
     // Удалить игру
