@@ -12,7 +12,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -29,7 +28,7 @@ public class GameService {
     public List<GameDto> getAllGames() {
         return gameRepository.findAllWithReviews().stream()
                 .map(GameMapper::toDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public Optional<GameDto> getGameById(Long id) {
@@ -40,7 +39,7 @@ public class GameService {
     public List<GameDto> getGamesByTitle(String title) {
         return gameRepository.findByTitleContainingIgnoreCase(title).stream()
                 .map(GameDto::new)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Transactional
@@ -110,52 +109,72 @@ public class GameService {
 
     @Transactional
     public GameDto patchGame(Long id, GameDto gameDto) {
-        Optional<Game> existingGameOptional = gameRepository.findById(id);
-        if (existingGameOptional.isPresent()) {
-            Game existingGame = existingGameOptional.get();
+        return gameRepository.findById(id)
+                .map(existingGame -> {
+                    updateGameProperties(existingGame, gameDto);
+                    updateGameCompanies(existingGame, gameDto.getCompanies());
+                    gameRepository.save(existingGame);
+                    return gameRepository.findByIdWithCompaniesGraph(id)
+                            .map(GameDto::new)
+                            .orElse(null);
+                })
+                .orElse(null);
+    }
 
-            // Проверяем, пришло ли новое название в запросе
-            if (gameDto.getTitle() != null) {
-                // Проверяем, отличается ли новое название от текущего
-                if (!existingGame.getTitle().equalsIgnoreCase(gameDto.getTitle())) {
-                    // Проверяем, не существует ли уже игра с таким новым названием
-                    if (gameRepository.existsByTitle(gameDto.getTitle())) {
-                        throw new RuntimeException("Игра с таким названием уже существует.");
-                    }
-                    existingGame.setTitle(gameDto.getTitle());
-                }
-            }
-            if (gameDto.getReleaseDate() != null) {
-                existingGame.setReleaseDate(gameDto.getReleaseDate());
-            }
-            if (gameDto.getUpdateDate() != null) {
-                existingGame.setUpdateDate(gameDto.getUpdateDate());
-            }
-            if (gameDto.getAvgOnline() != null && gameDto.getAvgOnline() > 0) {
-                existingGame.setAvgOnline(gameDto.getAvgOnline());
-            }
-            if (gameDto.getReviewsSum() != null && gameDto.getReviewsSum() > 0) {
-                existingGame.setReviewsSum(gameDto.getReviewsSum());
-            }
+    private void updateGameProperties(Game existingGame, GameDto gameDto) {
+        updateTitle(existingGame, gameDto.getTitle());
+        updateReleaseDate(existingGame, gameDto.getReleaseDate());
+        updateUpdateDate(existingGame, gameDto.getUpdateDate());
+        updateAvgOnline(existingGame, gameDto.getAvgOnline());
+        updateReviewsSum(existingGame, gameDto.getReviewsSum());
+    }
 
-            if (gameDto.getCompanies() != null) {
-                existingGame.getCompanies().clear();
-                for (String companyName : gameDto.getCompanies()) {
-                    companyRepository.findByName(companyName).ifPresent(company -> {
-                        existingGame.getCompanies().add(company);
-                        if (company.getGames() == null) {
-                            company.setGames(new HashSet<>());
-                        }
-                        company.getGames().add(existingGame);
-                    });
-                }
+    private void updateTitle(Game existingGame, String newTitle) {
+        if (newTitle != null && !existingGame.getTitle().equalsIgnoreCase(newTitle)) {
+            if (gameRepository.existsByTitle(newTitle)) {
+                throw new RuntimeException("Игра с таким названием уже существует.");
             }
-            gameRepository.save(existingGame);
-            return gameRepository.findByIdWithCompaniesGraph(id)
-                    .map(GameDto::new)
-                    .orElse(null);
+            existingGame.setTitle(newTitle);
         }
-        return null;
+    }
+
+    private void updateReleaseDate(Game existingGame, java.time.LocalDate newReleaseDate) {
+        if (newReleaseDate != null) {
+            existingGame.setReleaseDate(newReleaseDate);
+        }
+    }
+
+    private void updateUpdateDate(Game existingGame, LocalDate newUpdateDate) {
+        if (newUpdateDate != null) {
+            existingGame.setUpdateDate(newUpdateDate);
+        }
+    }
+
+    private void updateAvgOnline(Game existingGame, Integer newAvgOnline) {
+        if (newAvgOnline != null && newAvgOnline > 0) {
+            existingGame.setAvgOnline(newAvgOnline);
+        }
+    }
+
+    private void updateReviewsSum(Game existingGame, Integer newReviewsSum) {
+        if (newReviewsSum != null && newReviewsSum > 0) {
+            existingGame.setReviewsSum(newReviewsSum);
+        }
+    }
+
+    private void updateGameCompanies(Game existingGame, List<String> companyNames) {
+        if (companyNames != null) {
+            existingGame.getCompanies().clear();
+            for (String companyName : companyNames) {
+                companyRepository.findByName(companyName).ifPresent(company -> {
+                    existingGame.getCompanies().add(company);
+                    if (company.getGames() == null) {
+                        company.setGames(new HashSet<>());
+                    }
+                    company.getGames().add(existingGame);
+                });
+            }
+        }
     }
 
     public boolean deleteGame(Long id) {

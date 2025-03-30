@@ -4,6 +4,9 @@ import com.gamelib.gamelib.dto.ReviewDto;
 import com.gamelib.gamelib.model.Review;
 
 public class ReviewMapper {
+    private ReviewMapper() {
+    }
+
     public static ReviewDto toDto(Review review) {
         ReviewDto dto = new ReviewDto();
         dto.setId(review.getId());

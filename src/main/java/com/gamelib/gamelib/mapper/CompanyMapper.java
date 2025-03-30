@@ -7,6 +7,9 @@ import java.util.Collections;
 import java.util.stream.Collectors;
 
 public class CompanyMapper {
+    private CompanyMapper() {
+    }
+
     public static CompanyDto toDto(Company company) {
         CompanyDto dto = new CompanyDto();
         dto.setId(company.getId());

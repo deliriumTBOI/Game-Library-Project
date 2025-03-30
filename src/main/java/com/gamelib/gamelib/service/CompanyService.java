@@ -21,7 +21,7 @@ public class CompanyService {
     public List<CompanyDto> getAllCompaniesWithGames() {
         return companyRepository.findAll().stream()
                 .map(CompanyDto::new)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public Optional<CompanyDto> getCompanyByIdWithGames(Long id) {
@@ -32,7 +32,7 @@ public class CompanyService {
     public List<CompanyDto> getCompaniesByNameWithGames(String name) {
         return companyRepository.findByNameContainingIgnoreCase(name).stream()
                 .map(CompanyDto::new)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     // Создать новую компанию

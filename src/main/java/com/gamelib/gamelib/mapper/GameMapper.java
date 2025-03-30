@@ -4,9 +4,11 @@ import com.gamelib.gamelib.dto.GameDto;
 import com.gamelib.gamelib.model.Company;
 import com.gamelib.gamelib.model.Game;
 import com.gamelib.gamelib.model.Review;
-import java.util.stream.Collectors;
 
 public class GameMapper {
+
+    private GameMapper() {
+    }
 
     public static GameDto toDto(Game game) {
         GameDto dto = new GameDto();
@@ -19,13 +21,12 @@ public class GameMapper {
         if (game.getCompanies() != null) {
             dto.setCompanies(game.getCompanies().stream()
                     .map(Company::getName) // Извлекаем название компании
-                    .collect(Collectors.toList()));
+                    .toList()); // Заменено на toList()
         }
-        // Добавляем маппинг для отзывов
         if (game.getReviews() != null) {
             dto.setReviews(game.getReviews().stream()
                     .map(Review::getContent) // Извлекаем содержимое отзыва
-                    .collect(Collectors.toList()));
+                    .toList()); // Заменено на toList()
         }
         return dto;
     }
