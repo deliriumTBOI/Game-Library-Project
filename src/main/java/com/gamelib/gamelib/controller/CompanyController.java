@@ -1,14 +1,21 @@
 package com.gamelib.gamelib.controller;
 
 import com.gamelib.gamelib.dto.CompanyDto;
+import com.gamelib.gamelib.mapper.CompanyMapper;
 import com.gamelib.gamelib.model.Company;
 import com.gamelib.gamelib.service.CompanyService;
-import com.gamelib.gamelib.mapper.CompanyMapper;
+import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-//
-import java.util.List;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/companies")
@@ -20,7 +27,8 @@ public class CompanyController {
     }
 
     @GetMapping
-    public List<CompanyDto> getAllCompaniesWithGames(@RequestParam(value = "name", required = false) String name) {
+    public List<CompanyDto> getAllCompaniesWithGames(@RequestParam(
+            value = "name", required = false) String name) {
         if (name != null) {
             return companyService.getCompaniesByNameWithGames(name);
         } else {
@@ -52,7 +60,8 @@ public class CompanyController {
 
     // Обновить компанию
     @PutMapping("/{id}")
-    public ResponseEntity<CompanyDto> updateCompany(@PathVariable Long id, @RequestBody CompanyDto companyDto) {
+    public ResponseEntity<CompanyDto> updateCompany(@PathVariable Long id,
+                                                    @RequestBody CompanyDto companyDto) {
         Company updatedCompany = companyService.updateCompany(id, companyDto);
         return updatedCompany != null ? ResponseEntity.ok(new CompanyDto(updatedCompany)) :
                 ResponseEntity.notFound().build();
@@ -63,9 +72,9 @@ public class CompanyController {
         boolean isDeleted = companyService.deleteCompany(id);
 
         if (isDeleted) {
-            return ResponseEntity.noContent().build();  // Статус 204 No Content, компания успешно удалена
+            return ResponseEntity.noContent().build();
         } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)  // Статус 404 Not Found, компания не найдена
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("Company with ID " + id + " not found");
         }
     }

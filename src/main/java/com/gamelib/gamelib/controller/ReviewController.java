@@ -1,15 +1,21 @@
 package com.gamelib.gamelib.controller;
 
-import com.gamelib.gamelib.model.Review;
 import com.gamelib.gamelib.dto.ReviewDto;
 import com.gamelib.gamelib.mapper.ReviewMapper;
+import com.gamelib.gamelib.model.Review;
 import com.gamelib.gamelib.service.ReviewService;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 import java.util.Optional;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/games/{gameId}/reviews")
@@ -23,14 +29,15 @@ public class ReviewController {
 
     // Создание отзыва для игры
     @PostMapping
-    public ResponseEntity<ReviewDto> createReview(@PathVariable Long gameId, @RequestBody Review review) {
+    public ResponseEntity<ReviewDto> createReview(@PathVariable Long gameId,
+                                                  @RequestBody Review review) {
         Review createdReview = reviewService.createReview(gameId, review);
         return new ResponseEntity<>(ReviewMapper.toDto(createdReview), HttpStatus.CREATED);
     }
 
     // Получение отзыва по ID
     @GetMapping("/{id}")
-    public ResponseEntity<Review> getReviewById(@PathVariable Long id) { // Измените тип возвращаемого значения здесь
+    public ResponseEntity<Review> getReviewById(@PathVariable Long id) {
         Optional<Review> review = reviewService.getReviewById(id);
         return review.map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -45,7 +52,8 @@ public class ReviewController {
 
     // Обновление отзыва
     @PutMapping("/{id}")
-    public ResponseEntity<Review> updateReview(@PathVariable Long id, @RequestBody Review updatedReview) {
+    public ResponseEntity<Review> updateReview(@PathVariable Long id,
+                                               @RequestBody Review updatedReview) {
         Review review = reviewService.updateReview(id, updatedReview);
         return new ResponseEntity<>(review, HttpStatus.OK);
     }

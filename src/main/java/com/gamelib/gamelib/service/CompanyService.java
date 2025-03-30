@@ -2,12 +2,12 @@ package com.gamelib.gamelib.service;
 
 import com.gamelib.gamelib.dto.CompanyDto;
 import com.gamelib.gamelib.model.Company;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import com.gamelib.gamelib.repository.CompanyRepository;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional
@@ -28,7 +28,7 @@ public class CompanyService {
         return companyRepository.findById(id)
                 .map(CompanyDto::new);
     }
-//
+
     public List<CompanyDto> getCompaniesByNameWithGames(String name) {
         return companyRepository.findByNameContainingIgnoreCase(name).stream()
                 .map(CompanyDto::new)

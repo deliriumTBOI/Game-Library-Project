@@ -1,13 +1,27 @@
 package com.gamelib.gamelib.model;
 
-import jakarta.persistence.*;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.NamedAttributeNode;
+import jakarta.persistence.NamedEntityGraph;
+import jakarta.persistence.NamedEntityGraphs;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 
+@SuppressWarnings("checkstyle:Indentation")
 @Entity
 @Table(name = "game")
 @NamedEntityGraphs({
@@ -34,10 +48,10 @@ public class Game {
     private LocalDate updateDate;
 
     @NotNull(message = "Average online cannot be null") // Проверка на null
-    @Column(name = "average_online", nullable = false) // Указание на столбец с именем "average_online"
+    @Column(name = "average_online", nullable = false)
     private int avgOnline;
 
-    @Column(name = "reviews_amount", nullable = false) // Указание на столбец с именем "reviews_amount"
+    @Column(name = "reviews_amount", nullable = false)
     private int reviewsSum = 0; // Инициализируем значение по умолчанию
 
     @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY)
@@ -49,12 +63,14 @@ public class Game {
     //@JsonManagedReference
     private Set<Company> companies;
 
-    @OneToMany(mappedBy = "game", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    @OneToMany(mappedBy = "game", cascade = CascadeType.ALL,
+            fetch = FetchType.LAZY, orphanRemoval = true)
     private Set<Review> reviews;
 
     // Конструкторы
 
-    public Game(String title, LocalDate releaseDate, LocalDate updateDate, int avgOnline, int reviewsSum, Set<Company> companies) {
+    public Game(String title, LocalDate releaseDate, LocalDate updateDate,
+                int avgOnline, int reviewsSum, Set<Company> companies) {
         this.title = title;
         this.releaseDate = releaseDate;
         this.updateDate = updateDate;
@@ -119,8 +135,6 @@ public class Game {
     public void setAvgOnline(int avgOnline) {
         this.avgOnline = avgOnline;
     }
-
-    // Непосредственно устанавливать reviewsSum больше не нужно, будем обновлять через коллекцию reviews
 
     public void setCompanies(Set<Company> companies) {
         this.companies = companies;

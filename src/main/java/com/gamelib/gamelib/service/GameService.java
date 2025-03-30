@@ -1,35 +1,28 @@
 package com.gamelib.gamelib.service;
 
 import com.gamelib.gamelib.dto.GameDto;
+import com.gamelib.gamelib.mapper.GameMapper;
 import com.gamelib.gamelib.model.Company;
 import com.gamelib.gamelib.model.Game;
-import com.gamelib.gamelib.mapper.GameMapper;
-import com.gamelib.gamelib.model.Review;
 import com.gamelib.gamelib.repository.CompanyRepository;
 import com.gamelib.gamelib.repository.GameRepository;
-import com.gamelib.gamelib.repository.ReviewRepository;
 import jakarta.transaction.Transactional;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
-
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.springframework.stereotype.Service;
 
 @Service
 public class GameService {
     private final GameRepository gameRepository;
     private final CompanyRepository companyRepository;
-    private final ReviewRepository reviewRepository;
 
-    public GameService(GameRepository gameRepository, CompanyRepository companyRepository, ReviewRepository reviewRepository) {
+    public GameService(GameRepository gameRepository, CompanyRepository companyRepository) {
         this.gameRepository = gameRepository;
         this.companyRepository = companyRepository;
-        this.reviewRepository = reviewRepository;
     }
 
     @Transactional// Добавьте аннотацию @Transactional
@@ -53,7 +46,7 @@ public class GameService {
     @Transactional
     public Game createGame(GameDto gameDto) {
         if (gameRepository.existsByTitle(gameDto.getTitle())) {
-            throw new RuntimeException("Игра с таким названием уже существует."); // Или можете вернуть null, бросить кастомное исключение и т.д.
+            throw new RuntimeException("Game is already exist");
         }
 
         Game game = new Game(
@@ -80,7 +73,6 @@ public class GameService {
                     }
                     company.getGames().add(game);
                 });
-                // Здесь вы можете добавить логику обработки случая, когда компания с таким названием не найдена
             }
             game.setCompanies(companies);
         }
@@ -133,10 +125,18 @@ public class GameService {
                     existingGame.setTitle(gameDto.getTitle());
                 }
             }
-            if (gameDto.getReleaseDate() != null) existingGame.setReleaseDate(gameDto.getReleaseDate());
-            if (gameDto.getUpdateDate() != null) existingGame.setUpdateDate(gameDto.getUpdateDate());
-            if (gameDto.getAvgOnline() != null && gameDto.getAvgOnline() > 0) existingGame.setAvgOnline(gameDto.getAvgOnline());
-            if (gameDto.getReviewsSum() != null && gameDto.getReviewsSum() > 0) existingGame.setReviewsSum(gameDto.getReviewsSum());
+            if (gameDto.getReleaseDate() != null) {
+                existingGame.setReleaseDate(gameDto.getReleaseDate());
+            }
+            if (gameDto.getUpdateDate() != null) {
+                existingGame.setUpdateDate(gameDto.getUpdateDate());
+            }
+            if (gameDto.getAvgOnline() != null && gameDto.getAvgOnline() > 0) {
+                existingGame.setAvgOnline(gameDto.getAvgOnline());
+            }
+            if (gameDto.getReviewsSum() != null && gameDto.getReviewsSum() > 0) {
+                existingGame.setReviewsSum(gameDto.getReviewsSum());
+            }
 
             if (gameDto.getCompanies() != null) {
                 existingGame.getCompanies().clear();
@@ -156,47 +156,6 @@ public class GameService {
                     .orElse(null);
         }
         return null;
-    }
-
-    @Transactional
-    public void addReviewToGame(Long gameId, Review review) {
-        Optional<Game> gameOptional = gameRepository.findById(gameId);
-        if (gameOptional.isPresent()) {
-            Game game = gameOptional.get();
-            review.setGame(game); // При установке game в review, связь обновится и в game
-            reviewRepository.save(review); // Сохраняем отзыв
-        } else {
-            // Обработка случая, когда игра не найдена
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Игра с ID " + gameId + " не найдена");
-        }
-    }
-
-    @Transactional
-    public void removeReviewFromGame(Long gameId, Long reviewId) {
-        Optional<Game> gameOptional = gameRepository.findById(gameId);
-        Optional<Review> reviewOptional = reviewRepository.findById(reviewId);
-        if (gameOptional.isPresent() && reviewOptional.isPresent()) {
-            Game game = gameOptional.get();
-            Review reviewToRemove = reviewOptional.get();
-            if (game.getReviews().contains(reviewToRemove)) {
-                game.removeReview(reviewToRemove); // Используем метод Game для удаления и обновления счетчика
-                gameRepository.save(game); // Сохраняем изменения в игре
-                reviewRepository.delete(reviewToRemove); // Удаляем сам отзыв
-            } else {
-                // Обработка случая, когда отзыв не принадлежит этой игре
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Отзыв с ID " + reviewId + " не принадлежит игре с ID " + gameId);
-            }
-        } else {
-            // Обработка случая, когда игра или отзыв не найдены
-            String message = "";
-            if (!gameOptional.isPresent()) {
-                message += "Игра с ID " + gameId + " не найдена. ";
-            }
-            if (!reviewOptional.isPresent()) {
-                message += "Отзыв с ID " + reviewId + " не найден.";
-            }
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, message.trim());
-        }
     }
 
     public boolean deleteGame(Long id) {

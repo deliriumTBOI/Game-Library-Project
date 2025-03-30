@@ -2,10 +2,9 @@ package com.gamelib.gamelib.dto;
 
 import com.gamelib.gamelib.model.Company;
 import com.gamelib.gamelib.model.Game;
+import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.Collections;
-
 
 public class CompanyDto {
     private Long id;
@@ -17,13 +16,6 @@ public class CompanyDto {
     public CompanyDto() {
     }
 
-    public CompanyDto(Long id, String name, String country, Set<String> games) {
-        this.id = id;
-        this.name = name;
-        this.country = country;
-        this.games = games;
-    }
-
     public CompanyDto(Company company) {
         this.id = company.getId();
         this.name = company.getName();
@@ -32,8 +24,6 @@ public class CompanyDto {
                 ? company.getGames().stream().map(Game::getTitle).collect(Collectors.toSet())
                 : Collections.emptySet(); // Безопасная обработка null
     }
-
-//
 
     // Геттеры
     public Long getId() {

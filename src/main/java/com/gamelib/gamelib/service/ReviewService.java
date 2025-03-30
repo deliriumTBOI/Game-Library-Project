@@ -5,12 +5,11 @@ import com.gamelib.gamelib.model.Review;
 import com.gamelib.gamelib.repository.GameRepository;
 import com.gamelib.gamelib.repository.ReviewRepository;
 import jakarta.transaction.Transactional;
+import java.util.List;
+import java.util.Optional;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.util.List;
-import java.util.Optional;
 
 @Service
 public class ReviewService {
@@ -32,7 +31,8 @@ public class ReviewService {
             review.setGame(game);
             return reviewRepository.save(review);
         } else {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Игра с ID " + gameId + " не найдена");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "Game with ID " + gameId + " not found");
         }
     }
 
@@ -47,7 +47,8 @@ public class ReviewService {
         if (gameOptional.isPresent()) {
             return reviewRepository.findByGameId(gameId);
         } else {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Игра с ID " + gameId + " не найдена");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "Game with ID " + gameId + " not found");
         }
     }
 
@@ -59,12 +60,13 @@ public class ReviewService {
                     if (updatedReview.getContent() != null) {
                         existingReview.setContent(updatedReview.getContent());
                     }
-                    if (updatedReview.getRating() != 0) { // Предполагаем, что 0 не является валидным обновлением рейтинга
+                    if (updatedReview.getRating() != 0) {
                         existingReview.setRating(updatedReview.getRating());
                     }
                     return reviewRepository.save(existingReview);
                 })
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Отзыв с ID " + id + " не найден"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Review with ID " + id + " not found"));
     }
 
     // Удаление отзыва
@@ -80,7 +82,8 @@ public class ReviewService {
             }
             reviewRepository.deleteById(id);
         } else {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Отзыв с ID " + id + " не найден");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "Review with ID " + id + " not found");
         }
     }
 }

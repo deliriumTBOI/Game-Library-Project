@@ -3,9 +3,9 @@ package com.gamelib.gamelib.mapper;
 import com.gamelib.gamelib.dto.CompanyDto;
 import com.gamelib.gamelib.model.Company;
 import com.gamelib.gamelib.model.Game;
-import java.util.stream.Collectors;
 import java.util.Collections;
-//
+import java.util.stream.Collectors;
+
 public class CompanyMapper {
     public static CompanyDto toDto(Company company) {
         CompanyDto dto = new CompanyDto();
