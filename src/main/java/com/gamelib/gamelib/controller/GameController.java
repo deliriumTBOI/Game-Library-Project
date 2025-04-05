@@ -1,11 +1,13 @@
 package com.gamelib.gamelib.controller;
 
 import com.gamelib.gamelib.dto.GameDto;
+import com.gamelib.gamelib.mapper.GameMapper;
 import com.gamelib.gamelib.model.Game;
 import com.gamelib.gamelib.service.GameService;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -22,37 +24,34 @@ import org.springframework.web.server.ResponseStatusException;
 @RequestMapping("/games")
 public class GameController {
     private final GameService gameService;
+    private final GameMapper gameMapper;
 
-    public GameController(GameService gameService) {
+    public GameController(GameService gameService, GameMapper gameMapper) {
         this.gameService = gameService;
-    }
-
-    // Получить игру по ID
-    @GetMapping("/{id}")
-    public ResponseEntity<GameDto> getGameById(@PathVariable Long id) {
-        return gameService.getGameById(id)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        this.gameMapper = gameMapper;
     }
 
     @GetMapping
-    public ResponseEntity<List<GameDto>> getGames(@RequestParam(
-            value = "title", required = false) String title) {
-        if (title != null) {
-            List<GameDto> games = gameService.getGamesByTitle(title);
-            return ResponseEntity.ok(games);
-        } else {
-            List<GameDto> games = gameService.getAllGames();
-            return ResponseEntity.ok(games);
-        }
+    @Transactional(readOnly = true)  // Add transactional to keep session open
+    public ResponseEntity<List<GameDto>> getGames() {
+        List<Game> games = gameService.getAllGames();
+        // Ensure collections are loaded within transaction
+        games.forEach(game -> {
+            game.getCompanies().size(); // Force initialization
+            if (game.getReviews() != null) {
+                game.getReviews().size(); // Force initialization
+            }
+        });
+        return ResponseEntity.ok(gameMapper.toDtoList(games));
     }
 
     // Добавить новую игру
     @PostMapping
     public ResponseEntity<GameDto> createGame(@RequestBody GameDto gameDto) {
         try {
-            Game createdGame = gameService.createGame(gameDto);
-            return new ResponseEntity<>(new GameDto(createdGame), HttpStatus.CREATED);
+            Game game = gameMapper.toEntity(gameDto);
+            Game createdGame = gameService.createGame(game);
+            return new ResponseEntity<>(gameMapper.toDto(createdGame), HttpStatus.CREATED);
         } catch (RuntimeException e) {
             if (e.getMessage().equals("Game is already exist")) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
@@ -66,17 +65,19 @@ public class GameController {
     // Обновить игру
     @PutMapping("/{id}")
     public ResponseEntity<GameDto> updateGame(@PathVariable Long id, @RequestBody GameDto gameDto) {
-        Game updatedGame = gameService.updateGame(id, gameDto);
-        return updatedGame != null ? ResponseEntity.ok(new GameDto(updatedGame)) :
+        Game game = gameMapper.toEntity(gameDto);
+        Game updatedGame = gameService.updateGame(id, game);
+        return updatedGame != null ? ResponseEntity.ok(gameMapper.toDto(updatedGame)) :
                 ResponseEntity.notFound().build();
     }
 
     // Частичное обновление игры (PATCH)
     @PatchMapping("/{id}")
     public ResponseEntity<GameDto> patchGame(@PathVariable Long id, @RequestBody GameDto gameDto) {
-        GameDto updatedGameDto = gameService.patchGame(id, gameDto);
-        if (updatedGameDto != null) {
-            return new ResponseEntity<>(updatedGameDto, HttpStatus.OK); // Возвращаем GameDto
+        Game game = gameMapper.toEntity(gameDto);
+        Game updatedGame = gameService.patchGame(id, game);
+        if (updatedGame != null) {
+            return new ResponseEntity<>(gameMapper.toDto(updatedGame), HttpStatus.OK);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
@@ -87,5 +88,24 @@ public class GameController {
     public ResponseEntity<Void> deleteGame(@PathVariable Long id) {
         boolean isDeleted = gameService.deleteGame(id);
         return isDeleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+    }
+
+    // Связь с компаниями
+    @PostMapping("/{gameId}/companies/{companyId}")
+    public ResponseEntity<GameDto> addCompanyToGame(@PathVariable Long gameId,
+                                                    @PathVariable Long companyId) {
+        Game updatedGame = gameService.addCompanyToGame(gameId, companyId);
+        if (updatedGame != null) {
+            return ResponseEntity.ok(gameMapper.toDto(updatedGame));
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @DeleteMapping("/{gameId}/companies/{companyId}")
+    public ResponseEntity<Void> removeCompanyFromGame(@PathVariable Long gameId,
+                                                      @PathVariable Long companyId) {
+        boolean removed = gameService.removeCompanyFromGame(gameId, companyId);
+        return removed ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
     }
 }

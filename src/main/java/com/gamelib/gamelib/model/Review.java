@@ -1,37 +1,34 @@
 package com.gamelib.gamelib.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 
 @Entity
+@Table(name = "reviews")
 public class Review {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 500)
-    private String content; // Отзыв
-
     @Column(nullable = false)
-    private int rating; // Рейтинг (1 - положительный, 0 - нейтральный, -1 - отрицательный)
+    private Integer rating;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @Column(length = 1000)
+    private String text;
+
+    private String author;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "game_id", nullable = false)
-    private Game game; // Игра, к которой относится отзыв
+    private Game game;
 
     // Конструкторы
     public Review() {
     }
 
-    public Review(String content, int rating) {
-        this.content = content;
+    public Review(Integer rating, String text, String author) {
         this.rating = rating;
+        this.text = text;
+        this.author = author;
     }
 
     // Геттеры и сеттеры
@@ -43,20 +40,28 @@ public class Review {
         this.id = id;
     }
 
-    public String getContent() {
-        return content;
-    }
-
-    public void setContent(String content) {
-        this.content = content;
-    }
-
-    public int getRating() {
+    public Integer getRating() {
         return rating;
     }
 
-    public void setRating(int rating) {
+    public void setRating(Integer rating) {
         this.rating = rating;
+    }
+
+    public String getText() {
+        return text;
+    }
+
+    public void setText(String text) {
+        this.text = text;
+    }
+
+    public String getAuthor() {
+        return author;
+    }
+
+    public void setAuthor(String author) {
+        this.author = author;
     }
 
     public Game getGame() {
@@ -65,8 +70,5 @@ public class Review {
 
     public void setGame(Game game) {
         this.game = game;
-        if (game != null && !game.getReviews().contains(this)) {
-            game.addReview(this); // Обеспечиваем двустороннюю связь при установке игры
-        }
     }
 }

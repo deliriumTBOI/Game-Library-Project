@@ -2,19 +2,23 @@ package com.gamelib.gamelib.dto;
 
 public class ReviewDto {
     private Long id;
-    private String content;
-    private int rating;
+    private Integer rating;
+    private String text;
+    private String author;
     private Long gameId;
 
     public ReviewDto() {
     }
 
-    public ReviewDto(Long id, String content, int rating, Long gameId) {
+    public ReviewDto(Long id, Integer rating, String text, String author, Long gameId) {
         this.id = id;
-        this.content = content;
         this.rating = rating;
+        this.text = text;
+        this.author = author;
         this.gameId = gameId;
     }
+
+    // Геттеры и сеттеры
 
     public Long getId() {
         return id;
@@ -24,20 +28,28 @@ public class ReviewDto {
         this.id = id;
     }
 
-    public String getContent() {
-        return content;
-    }
-
-    public void setContent(String content) {
-        this.content = content;
-    }
-
-    public int getRating() {
+    public Integer getRating() {
         return rating;
     }
 
-    public void setRating(int rating) {
+    public void setRating(Integer rating) {
         this.rating = rating;
+    }
+
+    public String getText() {
+        return text;
+    }
+
+    public void setText(String text) {
+        this.text = text;
+    }
+
+    public String getAuthor() {
+        return author;
+    }
+
+    public void setAuthor(String author) {
+        this.author = author;
     }
 
     public Long getGameId() {

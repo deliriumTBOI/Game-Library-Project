@@ -1,61 +1,84 @@
 package com.gamelib.gamelib.dto;
 
 import com.gamelib.gamelib.model.Company;
-import com.gamelib.gamelib.model.Game;
-import java.util.Collections;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.List;
 
 public class CompanyDto {
     private Long id;
     private String name;
-    private String country;
-    private Set<String> games; // Названия игр
+    private String description;
+    private Integer foundedYear;
+    private String website;
+    private List<GameDto> games = new ArrayList<>();
 
-    // Конструкторы
     public CompanyDto() {
     }
 
+    public CompanyDto(Long id, String name, String description, Integer foundedYear, String website) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.foundedYear = foundedYear;
+        this.website = website;
+    }
+
+    // Конструктор для преобразования из сущности Company
     public CompanyDto(Company company) {
         this.id = company.getId();
         this.name = company.getName();
-        this.country = company.getCountry();
-        this.games = (company.getGames() != null)
-                ? company.getGames().stream().map(Game::getTitle).collect(Collectors.toSet())
-                : Collections.emptySet(); // Безопасная обработка null
+        this.description = company.getDescription();
+        this.foundedYear = company.getFoundedYear();
+        this.website = company.getWebsite();
     }
 
-    // Геттеры
+    // Геттеры и сеттеры
+
     public Long getId() {
         return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getName() {
         return name;
     }
 
-    public String getCountry() {
-        return country;
-    }
-
-    public Set<String> getGames() {
-        return games;
-    }
-
-    // Сеттеры
-    public void setId(Long id) {
-        this.id = id;
-    }
-
     public void setName(String name) {
         this.name = name;
     }
 
-    public void setCountry(String country) {
-        this.country = country;
+    public String getDescription() {
+        return description;
     }
 
-    public void setGames(Set<String> games) {
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public Integer getFoundedYear() {
+        return foundedYear;
+    }
+
+    public void setFoundedYear(Integer foundedYear) {
+        this.foundedYear = foundedYear;
+    }
+
+    public String getWebsite() {
+        return website;
+    }
+
+    public void setWebsite(String website) {
+        this.website = website;
+    }
+
+    public List<GameDto> getGames() {
+        return games;
+    }
+
+    public void setGames(List<GameDto> games) {
         this.games = games;
     }
 }

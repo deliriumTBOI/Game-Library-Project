@@ -1,43 +1,39 @@
 package com.gamelib.gamelib.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.NamedAttributeNode;
-import jakarta.persistence.NamedEntityGraph;
-import jakarta.persistence.Table;
+import java.util.HashSet;
 import java.util.Set;
 
+import jakarta.persistence.*;
+
 @Entity
-@Table(name = "company")
-@NamedEntityGraph(name = "company-with-games",
-        attributeNodes = @NamedAttributeNode("games"))
+@Table(name = "companies")
 public class Company {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false, unique = true)
     private String name;
 
-    @Column(nullable = false, length = 100)
-    private String country;
+    @Column(length = 2000)
+    private String description;
+
+    private Integer foundedYear;
+
+    private String website;
 
     @ManyToMany(mappedBy = "companies", fetch = FetchType.LAZY)
-    //@JsonBackReference
-    private Set<Game> games;
+    private Set<Game> games = new HashSet<>();
 
     // Конструкторы
     public Company() {
     }
 
-    public Company(String name, String country) {
+    public Company(String name, String description, Integer foundedYear, String website) {
         this.name = name;
-        this.country = country;
+        this.description = description;
+        this.foundedYear = foundedYear;
+        this.website = website;
     }
 
     // Геттеры и сеттеры
@@ -57,12 +53,28 @@ public class Company {
         this.name = name;
     }
 
-    public String getCountry() {
-        return country;
+    public String getDescription() {
+        return description;
     }
 
-    public void setCountry(String country) {
-        this.country = country;
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public Integer getFoundedYear() {
+        return foundedYear;
+    }
+
+    public void setFoundedYear(Integer foundedYear) {
+        this.foundedYear = foundedYear;
+    }
+
+    public String getWebsite() {
+        return website;
+    }
+
+    public void setWebsite(String website) {
+        this.website = website;
     }
 
     public Set<Game> getGames() {
