@@ -6,8 +6,12 @@ import java.util.Optional;
 
 public interface ReviewService {
     Review createReview(Long gameId, Review review);
+
     Optional<Review> getReviewById(Long id);
+
     List<Review> getReviewsByGameId(Long gameId);
+
     Review updateReview(Long gameId, Long id, Review updatedReview);
+
     boolean deleteReview(Long gameId, Long id);
 }

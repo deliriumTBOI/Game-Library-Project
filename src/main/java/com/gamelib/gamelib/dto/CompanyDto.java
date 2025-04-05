@@ -15,7 +15,8 @@ public class CompanyDto {
     public CompanyDto() {
     }
 
-    public CompanyDto(Long id, String name, String description, Integer foundedYear, String website) {
+    public CompanyDto(Long id, String name, String description, Integer foundedYear,
+                      String website) {
         this.id = id;
         this.name = name;
         this.description = description;

@@ -25,7 +25,8 @@ public class ReviewServiceImpl implements ReviewService {
     @Transactional
     public Review createReview(Long gameId, Review review) {
         Game game = gameRepository.findById(gameId)
-                .orElseThrow(() -> new ResourceNotFoundException("Game not found with id: " + gameId));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Game not found with id: " + gameId));
 
         review.setGame(game);
         return reviewRepository.save(review);
@@ -49,14 +50,17 @@ public class ReviewServiceImpl implements ReviewService {
     @Transactional
     public Review updateReview(Long gameId, Long id, Review updatedReview) {
         Game game = gameRepository.findById(gameId)
-                .orElseThrow(() -> new ResourceNotFoundException("Game not found with id: " + gameId));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Game not found with id: " + gameId));
 
         Review existingReview = reviewRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Review not found with id: " + id));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Review not found with id: " + id));
 
         // Проверяем, принадлежит ли отзыв указанной игре
         if (!existingReview.getGame().getId().equals(gameId)) {
-            throw new ResourceNotFoundException("Review with id " + id + " does not belong to game with id " + gameId);
+            throw new ResourceNotFoundException("Review with id " + id
+                    + " does not belong to game with id " + gameId);
         }
 
         // Обновляем поля отзыва

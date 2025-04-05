@@ -6,14 +6,19 @@ import java.util.Optional;
 
 public interface CompanyService {
     Company createCompany(Company company);
+
     Optional<Company> getCompanyById(Long id);
+
     List<Company> getAllCompanies();
+
     List<Company> getCompaniesByName(String name);
+
     Company updateCompany(Long id, Company updatedCompany);
+
     boolean deleteCompany(Long id);
 
-    // Методы для связи с играми
     Company addGameToCompany(Long companyId, Long gameId);
+
     Company getCompanyByIdOrThrow(Long id);
 
     boolean removeGameFromCompany(Long companyId, Long gameId);

@@ -2,11 +2,10 @@ package com.gamelib.gamelib.mapper;
 
 import com.gamelib.gamelib.dto.CompanyDto;
 import com.gamelib.gamelib.model.Company;
-import com.gamelib.gamelib.model.Game;
 import java.util.List;
 import java.util.stream.Collectors;
-import org.springframework.stereotype.Component;
 import org.hibernate.Hibernate;
+import org.springframework.stereotype.Component;
 
 @Component
 public class CompanyMapper {

@@ -6,12 +6,11 @@ import com.gamelib.gamelib.model.Company;
 import com.gamelib.gamelib.model.Game;
 import com.gamelib.gamelib.model.Review;
 import com.gamelib.gamelib.service.CompanyService;
-import org.hibernate.Hibernate;
-import org.springframework.stereotype.Component;
-
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.hibernate.Hibernate;
+import org.springframework.stereotype.Component;
 
 @Component
 public class GameMapper {

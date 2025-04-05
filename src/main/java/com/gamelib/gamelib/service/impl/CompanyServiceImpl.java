@@ -51,12 +51,14 @@ public class CompanyServiceImpl implements CompanyService {
     @Transactional
     public Company updateCompany(Long id, Company updatedCompany) {
         Company existingCompany = companyRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Company not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Company not found with id: "
+                        + id));
 
         // Проверка на дублирование при изменении названия
-        if (!existingCompany.getName().equals(updatedCompany.getName()) &&
-                companyRepository.existsByName(updatedCompany.getName())) {
-            throw new ResourceAlreadyExistsException("Company with name " + updatedCompany.getName() + " already exists");
+        if (!existingCompany.getName().equals(updatedCompany.getName())
+                && companyRepository.existsByName(updatedCompany.getName())) {
+            throw new ResourceAlreadyExistsException("Company with name "
+                    + updatedCompany.getName() + " already exists");
         }
 
         // Обновляем все поля
@@ -84,10 +86,12 @@ public class CompanyServiceImpl implements CompanyService {
     @Transactional
     public Company addGameToCompany(Long companyId, Long gameId) {
         Company company = companyRepository.findById(companyId)
-                .orElseThrow(() -> new ResourceNotFoundException("Company not found with id: " + companyId));
+                .orElseThrow(() -> new ResourceNotFoundException("Company not found with id: "
+                        + companyId));
 
         Game game = gameRepository.findById(gameId)
-                .orElseThrow(() -> new ResourceNotFoundException("Game not found with id: " + gameId));
+                .orElseThrow(() -> new ResourceNotFoundException("Game not found with id: "
+                        + gameId));
 
         // Добавляем игру к компании
         company.getGames().add(game);
@@ -98,18 +102,20 @@ public class CompanyServiceImpl implements CompanyService {
     @Override
     public Company getCompanyByIdOrThrow(Long id) {
         return companyRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Company not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Company not found with id: "
+                        + id));
     }
-
 
     @Override
     @Transactional
     public boolean removeGameFromCompany(Long companyId, Long gameId) {
         Company company = companyRepository.findById(companyId)
-                .orElseThrow(() -> new ResourceNotFoundException("Company not found with id: " + companyId));
+                .orElseThrow(() -> new ResourceNotFoundException("Company not found with id: "
+                        + companyId));
 
         Game game = gameRepository.findById(gameId)
-                .orElseThrow(() -> new ResourceNotFoundException("Game not found with id: " + gameId));
+                .orElseThrow(() -> new ResourceNotFoundException("Game not found with id: "
+                        + gameId));
 
         // Удаляем игру из компании
         boolean removed = company.getGames().remove(game);

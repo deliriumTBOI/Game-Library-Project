@@ -70,7 +70,8 @@ public class CompanyController {
         try {
             Company company = companyMapper.toEntity(companyDto);
             Company createdCompany = companyService.createCompany(company);
-            return ResponseEntity.status(HttpStatus.CREATED).body(companyMapper.toDto(createdCompany));
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(companyMapper.toDto(createdCompany));
         } catch (RuntimeException e) {
             if (e.getMessage().equals("Company is already exist")) {
                 return ResponseEntity.status(HttpStatus.CONFLICT)
