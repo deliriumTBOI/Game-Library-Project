@@ -5,6 +5,7 @@ import com.gamelib.gamelib.mapper.CompanyMapper;
 import com.gamelib.gamelib.model.Company;
 import com.gamelib.gamelib.service.CompanyService;
 import java.util.List;
+import org.hibernate.Hibernate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,9 +31,9 @@ public class CompanyController {
     }
 
     @GetMapping
-    @Transactional(readOnly = true)  // Add transactional to keep session open
-    public ResponseEntity<List<CompanyDto>> getAllCompanies(@RequestParam(
-            value = "name", required = false) String name) {
+    @Transactional(readOnly = true)
+    public ResponseEntity<List<CompanyDto>>
+        getAllCompanies(@RequestParam(value = "name", required = false) String name) {
         List<Company> companies;
         if (name != null) {
             companies = companyService.getCompaniesByName(name);
@@ -40,10 +41,9 @@ public class CompanyController {
             companies = companyService.getAllCompanies();
         }
 
-        // Ensure collections are loaded within transaction
         companies.forEach(company -> {
             if (company.getGames() != null) {
-                company.getGames().size(); // Force initialization
+                Hibernate.initialize(company.getGames());
             }
         });
 
@@ -55,16 +55,14 @@ public class CompanyController {
     public ResponseEntity<CompanyDto> getCompanyById(@PathVariable Long id) {
         return companyService.getCompanyById(id)
                 .map(company -> {
-                    // Force initialization of games collection
                     if (company.getGames() != null) {
-                        company.getGames().size();
+                        Hibernate.initialize(company.getGames());
                     }
                     return ResponseEntity.ok(companyMapper.toDto(company));
                 })
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    // Добавить новую компанию
     @PostMapping
     public ResponseEntity<?> createCompany(@RequestBody CompanyDto companyDto) {
         try {
@@ -73,7 +71,7 @@ public class CompanyController {
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(companyMapper.toDto(createdCompany));
         } catch (RuntimeException e) {
-            if (e.getMessage().equals("Company is already exist")) {
+            if ("Company is already exist".equals(e.getMessage())) {
                 return ResponseEntity.status(HttpStatus.CONFLICT)
                         .body("Company is already exist");
             } else {
@@ -83,7 +81,6 @@ public class CompanyController {
         }
     }
 
-    // Обновить компанию
     @PutMapping("/{id}")
     @Transactional
     public ResponseEntity<CompanyDto> updateCompany(@PathVariable Long id,
@@ -91,9 +88,8 @@ public class CompanyController {
         Company company = companyMapper.toEntity(companyDto);
         Company updatedCompany = companyService.updateCompany(id, company);
 
-        // Force initialization of games collection
         if (updatedCompany != null && updatedCompany.getGames() != null) {
-            updatedCompany.getGames().size();
+            Hibernate.initialize(updatedCompany.getGames());
         }
 
         return updatedCompany != null ? ResponseEntity.ok(companyMapper.toDto(updatedCompany)) :
@@ -112,15 +108,13 @@ public class CompanyController {
         }
     }
 
-    // Связь с играми
     @GetMapping("/{companyId}/games")
     @Transactional(readOnly = true)
     public ResponseEntity<List<CompanyDto>> getGamesForCompany(@PathVariable Long companyId) {
         return companyService.getCompanyById(companyId)
                 .map(company -> {
-                    // Force initialization of games collection
                     if (company.getGames() != null) {
-                        company.getGames().size();
+                        Hibernate.initialize(company.getGames());
                     }
                     return ResponseEntity.ok(List.of(companyMapper.toDto(company)));
                 })
@@ -133,9 +127,8 @@ public class CompanyController {
                                                        @PathVariable Long gameId) {
         Company updatedCompany = companyService.addGameToCompany(companyId, gameId);
         if (updatedCompany != null) {
-            // Force initialization of games collection
             if (updatedCompany.getGames() != null) {
-                updatedCompany.getGames().size();
+                Hibernate.initialize(updatedCompany.getGames());
             }
             return ResponseEntity.ok(companyMapper.toDto(updatedCompany));
         } else {
