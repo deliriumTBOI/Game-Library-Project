@@ -64,7 +64,7 @@ public class CompanyController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createCompany(@RequestBody CompanyDto companyDto) {
+    public ResponseEntity<Object> createCompany(@RequestBody CompanyDto companyDto) {
         try {
             Company company = companyMapper.toEntity(companyDto);
             Company createdCompany = companyService.createCompany(company);
@@ -97,7 +97,7 @@ public class CompanyController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteCompany(@PathVariable Long id) {
+    public ResponseEntity<Object> deleteCompany(@PathVariable Long id) {
         boolean isDeleted = companyService.deleteCompany(id);
 
         if (isDeleted) {
