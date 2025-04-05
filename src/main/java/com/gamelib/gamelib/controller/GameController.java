@@ -5,6 +5,7 @@ import com.gamelib.gamelib.mapper.GameMapper;
 import com.gamelib.gamelib.model.Game;
 import com.gamelib.gamelib.service.GameService;
 import java.util.List;
+import org.hibernate.Hibernate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,7 +17,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -32,14 +32,16 @@ public class GameController {
     }
 
     @GetMapping
-    @Transactional(readOnly = true)  // Add transactional to keep session open
+    @Transactional(readOnly = true)
     public ResponseEntity<List<GameDto>> getGames() {
         List<Game> games = gameService.getAllGames();
         // Ensure collections are loaded within transaction
         games.forEach(game -> {
-            game.getCompanies().size(); // Force initialization
+            if (game.getCompanies() != null) {
+                Hibernate.initialize(game.getCompanies()); // Force initialization
+            }
             if (game.getReviews() != null) {
-                game.getReviews().size(); // Force initialization
+                Hibernate.initialize(game.getReviews()); // Force initialization
             }
         });
         return ResponseEntity.ok(gameMapper.toDtoList(games));
@@ -53,7 +55,7 @@ public class GameController {
             Game createdGame = gameService.createGame(game);
             return new ResponseEntity<>(gameMapper.toDto(createdGame), HttpStatus.CREATED);
         } catch (RuntimeException e) {
-            if (e.getMessage().equals("Game is already exist")) {
+            if ("Game is already exist".equals(e.getMessage())) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
             } else {
                 throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
