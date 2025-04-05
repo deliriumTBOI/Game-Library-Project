@@ -49,10 +49,6 @@ public class ReviewServiceImpl implements ReviewService {
     @Override
     @Transactional
     public Review updateReview(Long gameId, Long id, Review updatedReview) {
-        Game game = gameRepository.findById(gameId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Game not found with id: " + gameId));
-
         Review existingReview = reviewRepository.findById(id)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Review not found with id: " + id));

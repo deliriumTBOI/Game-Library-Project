@@ -1,7 +1,6 @@
 package com.gamelib.gamelib.mapper;
 
 import com.gamelib.gamelib.dto.GameDto;
-import com.gamelib.gamelib.dto.ReviewDto;
 import com.gamelib.gamelib.model.Company;
 import com.gamelib.gamelib.model.Game;
 import com.gamelib.gamelib.model.Review;
@@ -40,7 +39,7 @@ public class GameMapper {
         if (game.getReviews() != null && Hibernate.isInitialized(game.getReviews())) {
             dto.setReviews(game.getReviews().stream()
                     .map(reviewMapper::toDto)
-                    .collect(Collectors.toList()));
+                    .toList());
         }
 
         return dto;
@@ -69,7 +68,7 @@ public class GameMapper {
                         review.setGame(game);
                         return review;
                     })
-                    .collect(Collectors.toList());
+                    .toList();
             game.setReviews(reviews);
         }
 
@@ -79,6 +78,6 @@ public class GameMapper {
     public List<GameDto> toDtoList(List<Game> games) {
         return games.stream()
                 .map(this::toDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 }

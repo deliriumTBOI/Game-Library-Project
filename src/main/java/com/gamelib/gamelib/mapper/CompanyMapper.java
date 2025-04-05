@@ -3,7 +3,6 @@ package com.gamelib.gamelib.mapper;
 import com.gamelib.gamelib.dto.CompanyDto;
 import com.gamelib.gamelib.model.Company;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.hibernate.Hibernate;
 import org.springframework.stereotype.Component;
 
@@ -28,7 +27,7 @@ public class CompanyMapper {
         if (company.getGames() != null && Hibernate.isInitialized(company.getGames())) {
             dto.setGames(company.getGames().stream()
                     .map(gameMapper::toDto)
-                    .collect(Collectors.toList()));
+                    .toList());
         }
 
         return dto;
@@ -50,6 +49,6 @@ public class CompanyMapper {
     public List<CompanyDto> toDtoList(List<Company> companies) {
         return companies.stream()
                 .map(this::toDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 }

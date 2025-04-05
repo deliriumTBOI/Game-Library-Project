@@ -6,7 +6,6 @@ import com.gamelib.gamelib.model.Review;
 import com.gamelib.gamelib.service.ReviewService;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -53,7 +52,7 @@ public class ReviewController {
         List<Review> reviews = reviewService.getReviewsByGameId(gameId);
         List<ReviewDto> reviewDtos = reviews.stream()
                 .map(reviewMapper::toDto)
-                .collect(Collectors.toList());
+                .toList();
         return new ResponseEntity<>(reviewDtos, HttpStatus.OK);
     }
 
