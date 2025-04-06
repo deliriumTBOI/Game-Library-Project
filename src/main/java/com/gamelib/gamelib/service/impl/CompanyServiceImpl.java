@@ -14,6 +14,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class CompanyServiceImpl implements CompanyService {
+    private static final String COMPANY_NOT_FOUND_WITH_ID = "Company not found with id: ";
+    private static final String GAME_NOT_FOUND_WITH_ID = "Game not found with id: ";
+
     private final CompanyRepository companyRepository;
     private final GameRepository gameRepository;
 
@@ -25,7 +28,6 @@ public class CompanyServiceImpl implements CompanyService {
     @Override
     @Transactional
     public Company createCompany(Company company) {
-        // Проверяем уникальность компании по названию
         if (companyRepository.existsByName(company.getName())) {
             throw new ResourceAlreadyExistsException("Company is already exist");
         }
@@ -51,23 +53,18 @@ public class CompanyServiceImpl implements CompanyService {
     @Transactional
     public Company updateCompany(Long id, Company updatedCompany) {
         Company existingCompany = companyRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Company not found with id: "
-                        + id));
+                .orElseThrow(() -> new ResourceNotFoundException(COMPANY_NOT_FOUND_WITH_ID + id));
 
-        // Проверка на дублирование при изменении названия
         if (!existingCompany.getName().equals(updatedCompany.getName())
                 && companyRepository.existsByName(updatedCompany.getName())) {
             throw new ResourceAlreadyExistsException("Company with name "
                     + updatedCompany.getName() + " already exists");
         }
 
-        // Обновляем все поля
         existingCompany.setName(updatedCompany.getName());
         existingCompany.setDescription(updatedCompany.getDescription());
         existingCompany.setFoundedYear(updatedCompany.getFoundedYear());
         existingCompany.setWebsite(updatedCompany.getWebsite());
-
-        // Сохраняем существующие связи с играми
 
         return companyRepository.save(existingCompany);
     }
@@ -86,14 +83,12 @@ public class CompanyServiceImpl implements CompanyService {
     @Transactional
     public Company addGameToCompany(Long companyId, Long gameId) {
         Company company = companyRepository.findById(companyId)
-                .orElseThrow(() -> new ResourceNotFoundException("Company not found with id: "
+                .orElseThrow(() -> new ResourceNotFoundException(COMPANY_NOT_FOUND_WITH_ID
                         + companyId));
 
         Game game = gameRepository.findById(gameId)
-                .orElseThrow(() -> new ResourceNotFoundException("Game not found with id: "
-                        + gameId));
+                .orElseThrow(() -> new ResourceNotFoundException(GAME_NOT_FOUND_WITH_ID + gameId));
 
-        // Добавляем игру к компании
         company.getGames().add(game);
 
         return companyRepository.save(company);
@@ -102,22 +97,19 @@ public class CompanyServiceImpl implements CompanyService {
     @Override
     public Company getCompanyByIdOrThrow(Long id) {
         return companyRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Company not found with id: "
-                        + id));
+                .orElseThrow(() -> new ResourceNotFoundException(COMPANY_NOT_FOUND_WITH_ID + id));
     }
 
     @Override
     @Transactional
     public boolean removeGameFromCompany(Long companyId, Long gameId) {
         Company company = companyRepository.findById(companyId)
-                .orElseThrow(() -> new ResourceNotFoundException("Company not found with id: "
+                .orElseThrow(() -> new ResourceNotFoundException(COMPANY_NOT_FOUND_WITH_ID
                         + companyId));
 
         Game game = gameRepository.findById(gameId)
-                .orElseThrow(() -> new ResourceNotFoundException("Game not found with id: "
-                        + gameId));
+                .orElseThrow(() -> new ResourceNotFoundException(GAME_NOT_FOUND_WITH_ID + gameId));
 
-        // Удаляем игру из компании
         boolean removed = company.getGames().remove(game);
         if (removed) {
             companyRepository.save(company);
