@@ -1,6 +1,5 @@
 package com.gamelib.gamelib.dto;
 
-import com.gamelib.gamelib.model.Game;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
@@ -19,15 +18,6 @@ public class GameDto {
     private String description;
     private Date releaseDate;
     private String genre;
-    private Set<String> companyNames = new HashSet<>(); // Изменено с companyIds на companyNames
+    private Set<String> companyNames = new HashSet<>();
     private List<ReviewDto> reviews = new ArrayList<>();
-
-    // Конструктор из модели
-    public GameDto(Game game) {
-        this.id = game.getId();
-        this.title = game.getTitle();
-        this.description = game.getDescription();
-        this.releaseDate = game.getReleaseDate();
-        this.genre = game.getGenre();
-    }
 }
