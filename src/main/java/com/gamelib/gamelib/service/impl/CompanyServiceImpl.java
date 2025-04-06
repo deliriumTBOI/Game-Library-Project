@@ -95,9 +95,10 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
     @Override
-    public Company getCompanyByIdOrThrow(Long id) {
-        return companyRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(COMPANY_NOT_FOUND_WITH_ID + id));
+    public Company getCompanyByNameOrThrow(String name) {
+        return companyRepository.findByName(name)
+                .orElseThrow(() -> new ResourceNotFoundException("Company not found with name: "
+                        + name));
     }
 
     @Override

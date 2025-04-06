@@ -19,7 +19,7 @@ public interface CompanyService {
 
     Company addGameToCompany(Long companyId, Long gameId);
 
-    Company getCompanyByIdOrThrow(Long id);
+    Company getCompanyByNameOrThrow(String name);
 
     boolean removeGameFromCompany(Long companyId, Long gameId);
 }

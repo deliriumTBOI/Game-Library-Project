@@ -31,8 +31,8 @@ public class GameMapper {
         dto.setGenre(game.getGenre());
 
         if (game.getCompanies() != null && Hibernate.isInitialized(game.getCompanies())) {
-            dto.setCompanyIds(game.getCompanies().stream()
-                    .map(Company::getId)
+            dto.setCompanyNames(game.getCompanies().stream()
+                    .map(Company::getName)
                     .collect(Collectors.toSet()));
         }
 
@@ -53,9 +53,13 @@ public class GameMapper {
         game.setReleaseDate(dto.getReleaseDate());
         game.setGenre(dto.getGenre());
 
-        if (dto.getCompanyIds() != null) {
-            Set<Company> companies = dto.getCompanyIds().stream()
-                    .map(companyService::getCompanyByIdOrThrow)
+        // Здесь нужно будет искать компании по названиям,
+        // поскольку в DTO теперь хранятся названия вместо ID
+        if (dto.getCompanyNames() != null) {
+            // Предполагается, что у вас есть метод для поиска компании по имени
+            // Если такого метода нет, его нужно добавить в CompanyService
+            Set<Company> companies = dto.getCompanyNames().stream()
+                    .map(companyService::getCompanyByNameOrThrow) // Этот метод нужно будет создать
                     .collect(Collectors.toSet());
             game.setCompanies(companies);
         }

@@ -2,17 +2,16 @@ package com.gamelib.gamelib.mapper;
 
 import com.gamelib.gamelib.dto.CompanyDto;
 import com.gamelib.gamelib.model.Company;
+import com.gamelib.gamelib.model.Game;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.hibernate.Hibernate;
 import org.springframework.stereotype.Component;
 
 @Component
 public class CompanyMapper {
 
-    private final GameMapper gameMapper;
-
-    public CompanyMapper(GameMapper gameMapper) {
-        this.gameMapper = gameMapper;
+    public CompanyMapper() {
     }
 
     public CompanyDto toDto(Company company) {
@@ -23,11 +22,10 @@ public class CompanyMapper {
         dto.setFoundedYear(company.getFoundedYear());
         dto.setWebsite(company.getWebsite());
 
-        // Обработка игр - проверяем, инициализирована ли коллекция
         if (company.getGames() != null && Hibernate.isInitialized(company.getGames())) {
-            dto.setGames(company.getGames().stream()
-                    .map(gameMapper::toDto)
-                    .toList());
+            dto.setGameNames(company.getGames().stream()
+                    .map(Game::getTitle)
+                    .collect(Collectors.toSet()));
         }
 
         return dto;
@@ -41,7 +39,8 @@ public class CompanyMapper {
         company.setFoundedYear(dto.getFoundedYear());
         company.setWebsite(dto.getWebsite());
 
-        // Связи с играми устанавливаются через сервис
+        // Заметьте, что мы не устанавливаем games здесь, так как у нас только названия
+        // Если нужно сопоставить игры по названиям, это должно быть сделано отдельно
 
         return company;
     }

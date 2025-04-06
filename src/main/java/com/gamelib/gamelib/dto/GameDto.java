@@ -19,7 +19,7 @@ public class GameDto {
     private String description;
     private Date releaseDate;
     private String genre;
-    private Set<Long> companyIds = new HashSet<>();
+    private Set<String> companyNames = new HashSet<>(); // Изменено с companyIds на companyNames
     private List<ReviewDto> reviews = new ArrayList<>();
 
     // Конструктор из модели

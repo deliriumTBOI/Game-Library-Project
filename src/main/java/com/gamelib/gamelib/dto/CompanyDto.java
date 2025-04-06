@@ -1,8 +1,8 @@
 package com.gamelib.gamelib.dto;
 
 import com.gamelib.gamelib.model.Company;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,7 +16,7 @@ public class CompanyDto {
     private String description;
     private Integer foundedYear;
     private String website;
-    private List<GameDto> games = new ArrayList<>();
+    private Set<String> gameNames = new HashSet<>(); // Изменено с List<GameDto> на Set<String>
 
     // Конструктор из модели
     public CompanyDto(Company company) {

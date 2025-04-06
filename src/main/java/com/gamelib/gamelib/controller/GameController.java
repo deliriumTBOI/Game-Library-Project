@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -33,8 +34,16 @@ public class GameController {
 
     @GetMapping
     @Transactional(readOnly = true)
-    public ResponseEntity<List<GameDto>> getGames() {
-        List<Game> games = gameService.getAllGames();
+    public ResponseEntity<List<GameDto>> getGames(@RequestParam(required = false) String title) {
+        List<Game> games;
+
+        // If title parameter is provided, filter games by title
+        if (title != null && !title.isEmpty()) {
+            games = gameService.getGamesByTitle(title);
+        } else {
+            games = gameService.getAllGames();
+        }
+
         // Ensure collections are loaded within transaction
         games.forEach(game -> {
             if (game.getCompanies() != null) {
