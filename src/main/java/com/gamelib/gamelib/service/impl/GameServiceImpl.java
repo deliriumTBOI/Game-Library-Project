@@ -17,6 +17,8 @@ import org.springframework.util.StringUtils;
 
 @Service
 public class GameServiceImpl implements GameService {
+    private static final String GAME_NOT_FOUND_WITH_ID = "Game not found with id: ";
+
     private final GameRepository gameRepository;
     private final CompanyRepository companyRepository;
 
@@ -53,7 +55,7 @@ public class GameServiceImpl implements GameService {
     @Transactional
     public Game updateGame(Long id, Game updatedGame) {
         Game existingGame = gameRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Game not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(GAME_NOT_FOUND_WITH_ID + id));
 
         // Проверка уникальности названия
         if (!existingGame.getTitle().equals(updatedGame.getTitle())
@@ -90,7 +92,7 @@ public class GameServiceImpl implements GameService {
     @Transactional
     public Game patchGame(Long id, Game partialGame) {
         Game existingGame = gameRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Game not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(GAME_NOT_FOUND_WITH_ID + id));
 
         // Обновляем только непустые поля
         if (StringUtils.hasText(partialGame.getTitle())) {
@@ -146,7 +148,7 @@ public class GameServiceImpl implements GameService {
     @Transactional
     public Game addCompanyToGame(Long gameId, Long companyId) {
         Game game = gameRepository.findById(gameId)
-                .orElseThrow(() -> new ResourceNotFoundException("Game not found with id: "
+                .orElseThrow(() -> new ResourceNotFoundException(GAME_NOT_FOUND_WITH_ID
                         + gameId));
 
         Company company = companyRepository.findById(companyId)
@@ -161,7 +163,7 @@ public class GameServiceImpl implements GameService {
     @Transactional
     public boolean removeCompanyFromGame(Long gameId, Long companyId) {
         Game game = gameRepository.findById(gameId)
-                .orElseThrow(() -> new ResourceNotFoundException("Game not found with id: "
+                .orElseThrow(() -> new ResourceNotFoundException(GAME_NOT_FOUND_WITH_ID
                         + gameId));
 
         Company company = companyRepository.findById(companyId)
