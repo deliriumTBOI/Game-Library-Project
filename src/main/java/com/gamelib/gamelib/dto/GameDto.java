@@ -1,11 +1,18 @@
 package com.gamelib.gamelib.dto;
 
+import com.gamelib.gamelib.model.Game;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class GameDto {
     private Long id;
     private String title;
@@ -15,81 +22,12 @@ public class GameDto {
     private Set<Long> companyIds = new HashSet<>();
     private List<ReviewDto> reviews = new ArrayList<>();
 
-    public GameDto() {
-    }
-
-    public GameDto(Long id, String title, String description, Date releaseDate, String genre) {
-        this.id = id;
-        this.title = title;
-        this.description = description;
-        this.releaseDate = releaseDate;
-        this.genre = genre;
-    }
-
-    // Конструктор для преобразования из сущности Game
-    public GameDto(com.gamelib.gamelib.model.Game game) {
+    // Конструктор из модели
+    public GameDto(Game game) {
         this.id = game.getId();
         this.title = game.getTitle();
         this.description = game.getDescription();
         this.releaseDate = game.getReleaseDate();
         this.genre = game.getGenre();
-    }
-
-    // Геттеры и сеттеры
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public Date getReleaseDate() {
-        return releaseDate;
-    }
-
-    public void setReleaseDate(Date releaseDate) {
-        this.releaseDate = releaseDate;
-    }
-
-    public String getGenre() {
-        return genre;
-    }
-
-    public void setGenre(String genre) {
-        this.genre = genre;
-    }
-
-    public Set<Long> getCompanyIds() {
-        return companyIds;
-    }
-
-    public void setCompanyIds(Set<Long> companyIds) {
-        this.companyIds = companyIds;
-    }
-
-    public List<ReviewDto> getReviews() {
-        return reviews;
-    }
-
-    public void setReviews(List<ReviewDto> reviews) {
-        this.reviews = reviews;
     }
 }
