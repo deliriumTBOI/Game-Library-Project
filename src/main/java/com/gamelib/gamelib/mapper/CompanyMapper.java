@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 public class CompanyMapper {
 
     public CompanyMapper() {
+        // Пустой конструктор нужен для Spring или Jackson
     }
 
     public CompanyDto toDto(Company company) {
