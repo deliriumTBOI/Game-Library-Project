@@ -39,8 +39,8 @@ public class ReviewController {
 
     // Получение отзыва по ID
     @GetMapping("/{id}")
-    public ResponseEntity<ReviewDto> getReviewById(@PathVariable Long gameId,
-                                                   @PathVariable Long id) {
+    public ResponseEntity<ReviewDto> getReviewById(@PathVariable Long id,
+                                                   @PathVariable String gameId) {
         Optional<Review> review = reviewService.getReviewById(id);
         return review.map(r -> ResponseEntity.ok(reviewMapper.toDto(r)))
                 .orElse(ResponseEntity.notFound().build());
