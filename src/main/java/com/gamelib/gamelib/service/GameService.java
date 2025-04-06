@@ -2,12 +2,9 @@ package com.gamelib.gamelib.service;
 
 import com.gamelib.gamelib.model.Game;
 import java.util.List;
-import java.util.Optional;
 
 public interface GameService {
     Game createGame(Game game);
-
-    Optional<Game> getGameById(Long id);
 
     List<Game> getAllGames();
 
@@ -18,6 +15,8 @@ public interface GameService {
     Game patchGame(Long id, Game partialGame);
 
     boolean deleteGame(Long id);
+
+    Game getGameById(Long id);
 
     Game addCompanyToGame(Long gameId, Long companyId);
 

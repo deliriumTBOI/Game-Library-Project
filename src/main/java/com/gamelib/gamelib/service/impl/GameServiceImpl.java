@@ -9,7 +9,6 @@ import com.gamelib.gamelib.repository.CompanyRepository;
 import com.gamelib.gamelib.repository.GameRepository;
 import com.gamelib.gamelib.service.GameService;
 import java.util.List;
-import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -37,11 +36,6 @@ public class GameServiceImpl implements GameService {
     }
 
     @Override
-    public Optional<Game> getGameById(Long id) {
-        return gameRepository.findById(id);
-    }
-
-    @Override
     public List<Game> getAllGames() {
         return gameRepository.findAll();
     }
@@ -52,31 +46,33 @@ public class GameServiceImpl implements GameService {
     }
 
     @Override
+    public Game getGameById(Long id) {
+        return gameRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(GAME_NOT_FOUND_WITH_ID + id));
+    }
+
+    @Override
     @Transactional
     public Game updateGame(Long id, Game updatedGame) {
         Game existingGame = gameRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(GAME_NOT_FOUND_WITH_ID + id));
 
-        // Проверка уникальности названия
         if (!existingGame.getTitle().equals(updatedGame.getTitle())
                 && gameRepository.existsByTitle(updatedGame.getTitle())) {
             throw new ResourceAlreadyExistsException("Game with title "
                     + updatedGame.getTitle() + " already exists");
         }
 
-        // Обновляем основные поля
         existingGame.setTitle(updatedGame.getTitle());
         existingGame.setDescription(updatedGame.getDescription());
         existingGame.setReleaseDate(updatedGame.getReleaseDate());
         existingGame.setGenre(updatedGame.getGenre());
 
-        // Обновляем компании
         if (updatedGame.getCompanies() != null) {
             existingGame.getCompanies().clear();
             existingGame.getCompanies().addAll(updatedGame.getCompanies());
         }
 
-        // Обновляем отзывы
         if (updatedGame.getReviews() != null) {
             existingGame.getReviews().clear();
             for (Review review : updatedGame.getReviews()) {
@@ -94,7 +90,6 @@ public class GameServiceImpl implements GameService {
         Game existingGame = gameRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(GAME_NOT_FOUND_WITH_ID + id));
 
-        // Обновляем только непустые поля
         if (StringUtils.hasText(partialGame.getTitle())) {
             if (!existingGame.getTitle().equals(partialGame.getTitle())
                     && gameRepository.existsByTitle(partialGame.getTitle())) {
@@ -116,13 +111,11 @@ public class GameServiceImpl implements GameService {
             existingGame.setGenre(partialGame.getGenre());
         }
 
-        // Обновляем компании, если указаны
         if (partialGame.getCompanies() != null) {
             existingGame.getCompanies().clear();
             existingGame.getCompanies().addAll(partialGame.getCompanies());
         }
 
-        // Обновляем отзывы, если указаны
         if (partialGame.getReviews() != null) {
             existingGame.getReviews().clear();
             for (Review review : partialGame.getReviews()) {

@@ -53,17 +53,14 @@ public class ReviewServiceImpl implements ReviewService {
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Review not found with id: " + id));
 
-        // Проверяем, принадлежит ли отзыв указанной игре
         if (!existingReview.getGame().getId().equals(gameId)) {
             throw new ResourceNotFoundException("Review with id " + id
                     + " does not belong to game with id " + gameId);
         }
 
-        // Обновляем поля отзыва
         existingReview.setRating(updatedReview.getRating());
         existingReview.setText(updatedReview.getText());
         existingReview.setAuthor(updatedReview.getAuthor());
-        // НЕ меняем связь с игрой
 
         return reviewRepository.save(existingReview);
     }
@@ -71,18 +68,15 @@ public class ReviewServiceImpl implements ReviewService {
     @Override
     @Transactional
     public boolean deleteReview(Long gameId, Long id) {
-        // Проверяем, существует ли игра
         if (!gameRepository.existsById(gameId)) {
             throw new ResourceNotFoundException("Game not found with id: " + gameId);
         }
 
-        // Проверяем, существует ли отзыв
         Optional<Review> reviewOpt = reviewRepository.findById(id);
         if (reviewOpt.isEmpty()) {
             return false;
         }
 
-        // Проверяем, принадлежит ли отзыв указанной игре
         Review review = reviewOpt.get();
         if (!review.getGame().getId().equals(gameId)) {
             return false;

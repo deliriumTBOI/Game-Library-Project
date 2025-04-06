@@ -39,9 +39,6 @@ public class CompanyMapper {
         company.setFoundedYear(dto.getFoundedYear());
         company.setWebsite(dto.getWebsite());
 
-        // Заметьте, что мы не устанавливаем games здесь, так как у нас только названия
-        // Если нужно сопоставить игры по названиям, это должно быть сделано отдельно
-
         return company;
     }
 

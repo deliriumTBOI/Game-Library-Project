@@ -19,9 +19,21 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 @Entity
 @Table(name = "games")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@ToString(exclude = {"companies", "reviews"})
+@EqualsAndHashCode(of = {"id"})
 public class Game {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -49,92 +61,10 @@ public class Game {
     @OneToMany(mappedBy = "game", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Review> reviews = new ArrayList<>();
 
-    // Конструкторы
-    public Game() {
-    }
-
     public Game(String title, String description, Date releaseDate, String genre) {
         this.title = title;
         this.description = description;
         this.releaseDate = releaseDate;
         this.genre = genre;
-    }
-
-    // Геттеры и сеттеры
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public Date getReleaseDate() {
-        return releaseDate;
-    }
-
-    public void setReleaseDate(Date releaseDate) {
-        this.releaseDate = releaseDate;
-    }
-
-    public String getGenre() {
-        return genre;
-    }
-
-    public void setGenre(String genre) {
-        this.genre = genre;
-    }
-
-    public Set<Company> getCompanies() {
-        return companies;
-    }
-
-    public void setCompanies(Set<Company> companies) {
-        this.companies = companies;
-    }
-
-    public List<Review> getReviews() {
-        return reviews;
-    }
-
-    public void setReviews(List<Review> reviews) {
-        this.reviews = reviews;
-    }
-
-    // Вспомогательные методы для управления связями
-    public void addCompany(Company company) {
-        this.companies.add(company);
-        company.getGames().add(this);
-    }
-
-    public void removeCompany(Company company) {
-        this.companies.remove(company);
-        company.getGames().remove(this);
-    }
-
-    public void addReview(Review review) {
-        reviews.add(review);
-        review.setGame(this);
-    }
-
-    public void removeReview(Review review) {
-        reviews.remove(review);
-        review.setGame(null);
     }
 }

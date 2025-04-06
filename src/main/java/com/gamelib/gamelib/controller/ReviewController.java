@@ -28,7 +28,6 @@ public class ReviewController {
         this.reviewMapper = reviewMapper;
     }
 
-    // Создание отзыва для игры
     @PostMapping
     public ResponseEntity<ReviewDto> createReview(@PathVariable Long gameId,
                                                   @RequestBody ReviewDto reviewDto) {
@@ -37,7 +36,6 @@ public class ReviewController {
         return new ResponseEntity<>(reviewMapper.toDto(createdReview), HttpStatus.CREATED);
     }
 
-    // Получение отзыва по ID
     @GetMapping("/{id}")
     public ResponseEntity<ReviewDto> getReviewById(@PathVariable Long id,
                                                    @PathVariable String gameId) {
@@ -46,7 +44,6 @@ public class ReviewController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // Получение всех отзывов для определенной игры
     @GetMapping
     public ResponseEntity<List<ReviewDto>> getReviewsByGameId(@PathVariable Long gameId) {
         List<Review> reviews = reviewService.getReviewsByGameId(gameId);
@@ -56,7 +53,6 @@ public class ReviewController {
         return new ResponseEntity<>(reviewDtos, HttpStatus.OK);
     }
 
-    // Обновление отзыва
     @PutMapping("/{id}")
     public ResponseEntity<ReviewDto> updateReview(@PathVariable Long gameId,
                                                   @PathVariable Long id,
@@ -70,7 +66,6 @@ public class ReviewController {
         }
     }
 
-    // Удаление отзыва
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteReview(@PathVariable Long gameId, @PathVariable Long id) {
         boolean deleted = reviewService.deleteReview(gameId, id);

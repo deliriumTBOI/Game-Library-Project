@@ -10,9 +10,21 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 import java.util.HashSet;
 import java.util.Set;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 @Entity
 @Table(name = "companies")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@ToString(exclude = {"games"})
+@EqualsAndHashCode(of = {"id"})
 public class Company {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,64 +42,4 @@ public class Company {
 
     @ManyToMany(mappedBy = "companies", fetch = FetchType.LAZY)
     private Set<Game> games = new HashSet<>();
-
-    // Конструкторы
-    public Company() {
-    }
-
-    public Company(String name, String description, Integer foundedYear, String website) {
-        this.name = name;
-        this.description = description;
-        this.foundedYear = foundedYear;
-        this.website = website;
-    }
-
-    // Геттеры и сеттеры
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public Integer getFoundedYear() {
-        return foundedYear;
-    }
-
-    public void setFoundedYear(Integer foundedYear) {
-        this.foundedYear = foundedYear;
-    }
-
-    public String getWebsite() {
-        return website;
-    }
-
-    public void setWebsite(String website) {
-        this.website = website;
-    }
-
-    public Set<Game> getGames() {
-        return games;
-    }
-
-    public void setGames(Set<Game> games) {
-        this.games = games;
-    }
 }

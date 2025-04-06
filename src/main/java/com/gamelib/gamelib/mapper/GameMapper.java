@@ -53,18 +53,13 @@ public class GameMapper {
         game.setReleaseDate(dto.getReleaseDate());
         game.setGenre(dto.getGenre());
 
-        // Здесь нужно будет искать компании по названиям,
-        // поскольку в DTO теперь хранятся названия вместо ID
         if (dto.getCompanyNames() != null) {
-            // Предполагается, что у вас есть метод для поиска компании по имени
-            // Если такого метода нет, его нужно добавить в CompanyService
             Set<Company> companies = dto.getCompanyNames().stream()
-                    .map(companyService::getCompanyByNameOrThrow) // Этот метод нужно будет создать
+                    .map(companyService::getCompanyByNameOrThrow)
                     .collect(Collectors.toSet());
             game.setCompanies(companies);
         }
 
-        // Преобразуем ReviewDto → Review и устанавливаем game
         if (dto.getReviews() != null) {
             List<Review> reviews = dto.getReviews().stream()
                     .map(reviewDto -> {

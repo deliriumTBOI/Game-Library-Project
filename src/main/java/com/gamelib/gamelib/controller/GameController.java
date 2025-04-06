@@ -37,26 +37,41 @@ public class GameController {
     public ResponseEntity<List<GameDto>> getGames(@RequestParam(required = false) String title) {
         List<Game> games;
 
-        // If title parameter is provided, filter games by title
         if (title != null && !title.isEmpty()) {
             games = gameService.getGamesByTitle(title);
         } else {
             games = gameService.getAllGames();
         }
 
-        // Ensure collections are loaded within transaction
         games.forEach(game -> {
             if (game.getCompanies() != null) {
-                Hibernate.initialize(game.getCompanies()); // Force initialization
+                Hibernate.initialize(game.getCompanies());
             }
             if (game.getReviews() != null) {
-                Hibernate.initialize(game.getReviews()); // Force initialization
+                Hibernate.initialize(game.getReviews());
             }
         });
         return ResponseEntity.ok(gameMapper.toDtoList(games));
     }
 
-    // Добавить новую игру
+    @GetMapping("/{id}")
+    @Transactional(readOnly = true)
+    public ResponseEntity<GameDto> getGameById(@PathVariable Long id) {
+        Game game = gameService.getGameById(id);
+        if (game != null) {
+
+            if (game.getCompanies() != null) {
+                Hibernate.initialize(game.getCompanies());
+            }
+            if (game.getReviews() != null) {
+                Hibernate.initialize(game.getReviews());
+            }
+            return ResponseEntity.ok(gameMapper.toDto(game));
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     @PostMapping
     public ResponseEntity<GameDto> createGame(@RequestBody GameDto gameDto) {
         try {
@@ -73,7 +88,6 @@ public class GameController {
         }
     }
 
-    // Обновить игру
     @PutMapping("/{id}")
     public ResponseEntity<GameDto> updateGame(@PathVariable Long id, @RequestBody GameDto gameDto) {
         Game game = gameMapper.toEntity(gameDto);
@@ -82,7 +96,6 @@ public class GameController {
                 ResponseEntity.notFound().build();
     }
 
-    // Частичное обновление игры (PATCH)
     @PatchMapping("/{id}")
     public ResponseEntity<GameDto> patchGame(@PathVariable Long id, @RequestBody GameDto gameDto) {
         Game game = gameMapper.toEntity(gameDto);
@@ -94,14 +107,12 @@ public class GameController {
         }
     }
 
-    // Удалить игру
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteGame(@PathVariable Long id) {
         boolean isDeleted = gameService.deleteGame(id);
         return isDeleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
     }
 
-    // Связь с компаниями
     @PostMapping("/{gameId}/companies/{companyId}")
     public ResponseEntity<GameDto> addCompanyToGame(@PathVariable Long gameId,
                                                     @PathVariable Long companyId) {

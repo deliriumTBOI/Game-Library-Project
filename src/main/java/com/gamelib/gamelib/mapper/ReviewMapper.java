@@ -23,7 +23,7 @@ public class ReviewMapper {
         review.setRating(dto.getRating());
         review.setText(dto.getText());
         review.setAuthor(dto.getAuthor());
-        // Game устанавливается в сервисе
+
         return review;
     }
 }
