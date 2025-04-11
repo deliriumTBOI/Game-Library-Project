@@ -1,5 +1,6 @@
 package com.gamelib.gamelib.service.impl;
 
+import com.gamelib.gamelib.cache.LruCache;
 import com.gamelib.gamelib.exception.ResourceAlreadyExistsException;
 import com.gamelib.gamelib.exception.ResourceNotFoundException;
 import com.gamelib.gamelib.model.Company;
@@ -13,13 +14,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-
 @Service
 public class GameServiceImpl implements GameService {
     private static final String GAME_NOT_FOUND_WITH_ID = "Game not found with id: ";
+    private static final String CACHE_MIN_RATING_PREFIX = "games:min_rating:";
+    private static final String CACHE_RATING_RANGE_PREFIX = "games:rating_range:";
 
     private final GameRepository gameRepository;
     private final CompanyRepository companyRepository;
+    private final LruCache<String, List<Game>> gameCache = new LruCache<>(50000,
+            100, "GameCache");
 
     public GameServiceImpl(GameRepository gameRepository, CompanyRepository companyRepository) {
         this.gameRepository = gameRepository;
@@ -32,7 +36,9 @@ public class GameServiceImpl implements GameService {
         if (gameRepository.existsByTitle(game.getTitle())) {
             throw new ResourceAlreadyExistsException("Game is already exist");
         }
-        return gameRepository.save(game);
+        Game createdGame = gameRepository.save(game);
+        clearQueryCaches();
+        return createdGame;
     }
 
     @Override
@@ -81,7 +87,9 @@ public class GameServiceImpl implements GameService {
             }
         }
 
-        return gameRepository.save(existingGame);
+        Game result = gameRepository.save(existingGame);
+        clearQueryCaches();
+        return result;
     }
 
     @Override
@@ -124,7 +132,9 @@ public class GameServiceImpl implements GameService {
             }
         }
 
-        return gameRepository.save(existingGame);
+        Game result = gameRepository.save(existingGame);
+        clearQueryCaches();
+        return result;
     }
 
     @Override
@@ -132,10 +142,12 @@ public class GameServiceImpl implements GameService {
     public boolean deleteGame(Long id) {
         if (gameRepository.existsById(id)) {
             gameRepository.deleteById(id);
+            clearQueryCaches();
             return true;
         }
         return false;
     }
+
 
     @Override
     @Transactional
@@ -169,5 +181,57 @@ public class GameServiceImpl implements GameService {
         }
 
         return removed;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Game> getGamesByMinimumRating(Integer minRating) {
+        String cacheKey = CACHE_MIN_RATING_PREFIX + minRating;
+
+        // Проверяем наличие результатов в кэше
+        if (gameCache.containsKey(cacheKey)) {
+            return gameCache.get(cacheKey);
+        }
+
+        // Выполняем запрос, если данных нет в кэше
+        List<Game> games = gameRepository.findGamesByMinimumRating(minRating);
+
+        // Сохраняем результат в кэш
+        gameCache.put(cacheKey, games);
+
+        return games;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Game> getGamesByRatingRange(Integer minRating, Integer maxRating) {
+        String cacheKey = CACHE_RATING_RANGE_PREFIX + minRating + ":" + maxRating;
+
+        // Проверяем наличие результатов в кэше
+        if (gameCache.containsKey(cacheKey)) {
+            return gameCache.get(cacheKey);
+        }
+
+        // Выполняем запрос, если данных нет в кэше
+        List<Game> games = gameRepository.findGamesByRatingRange(minRating, maxRating);
+
+        // Сохраняем результат в кэш
+        gameCache.put(cacheKey, games);
+
+        return games;
+    }
+
+    @Override
+    public void clearCache() {
+        gameCache.clear();
+    }
+
+    /**
+     * Очищает только кеши для запросов, связанных с рейтингами
+     */
+    private void clearQueryCaches() {
+        // Более селективный подход: чистим только кеши запросов,
+        // так как изменения в играх могут повлиять на результаты запросов по рейтингам
+        gameCache.clear();
     }
 }

@@ -124,6 +124,43 @@ public class GameController {
         }
     }
 
+    @GetMapping("/by-rating")
+    @Transactional(readOnly = true)
+    public ResponseEntity<List<GameDto>> getGamesByRating(
+            @RequestParam(required = false) Integer minRating,
+            @RequestParam(required = false) Integer maxRating) {
+
+        List<Game> games;
+
+        // Если указаны оба параметра - используем диапазон
+        if (minRating != null && maxRating != null) {
+            games = gameService.getGamesByRatingRange(minRating, maxRating);
+        } else if (minRating != null) {
+            games = gameService.getGamesByMinimumRating(minRating);
+        } else {
+            games = gameService.getAllGames();
+        }
+
+        // Инициализируем связанные сущности для корректной сериализации
+        games.forEach(game -> {
+            if (game.getCompanies() != null) {
+                Hibernate.initialize(game.getCompanies());
+            }
+            if (game.getReviews() != null) {
+                Hibernate.initialize(game.getReviews());
+            }
+        });
+
+        return ResponseEntity.ok(gameMapper.toDtoList(games));
+    }
+
+    // Дополнительный метод для очистки кэша (опционально)
+    @DeleteMapping("/cache")
+    public ResponseEntity<Void> clearCache() {
+        gameService.clearCache();
+        return ResponseEntity.noContent().build();
+    }
+
     @DeleteMapping("/{gameId}/companies/{companyId}")
     public ResponseEntity<Void> removeCompanyFromGame(@PathVariable Long gameId,
                                                       @PathVariable Long companyId) {

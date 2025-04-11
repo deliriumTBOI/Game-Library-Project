@@ -1,5 +1,6 @@
 package com.gamelib.gamelib.service.impl;
 
+import com.gamelib.gamelib.cache.LruCache;
 import com.gamelib.gamelib.exception.ResourceAlreadyExistsException;
 import com.gamelib.gamelib.exception.ResourceNotFoundException;
 import com.gamelib.gamelib.model.Company;
@@ -16,9 +17,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class CompanyServiceImpl implements CompanyService {
     private static final String COMPANY_NOT_FOUND_WITH_ID = "Company not found with id: ";
     private static final String GAME_NOT_FOUND_WITH_ID = "Game not found with id: ";
+    private static final String CACHE_COMPANY_PREFIX = "company:id:";
 
     private final CompanyRepository companyRepository;
     private final GameRepository gameRepository;
+    private final LruCache<String, Company> companyCache = new LruCache<>(50000,
+            100, "CompanyCache");
 
     public CompanyServiceImpl(CompanyRepository companyRepository, GameRepository gameRepository) {
         this.companyRepository = companyRepository;
@@ -36,7 +40,21 @@ public class CompanyServiceImpl implements CompanyService {
 
     @Override
     public Optional<Company> getCompanyById(Long id) {
-        return companyRepository.findById(id);
+        String cacheKey = CACHE_COMPANY_PREFIX + id;
+
+        // Проверяем наличие в кэше
+        if (companyCache.containsKey(cacheKey)) {
+            Company cachedCompany = companyCache.get(cacheKey);
+            return Optional.ofNullable(cachedCompany);
+        }
+
+        // Если нет в кэше, получаем из репозитория
+        Optional<Company> companyOpt = companyRepository.findById(id);
+
+        // Если компания найдена, кешируем её
+        companyOpt.ifPresent(company -> companyCache.put(cacheKey, company));
+
+        return companyOpt;
     }
 
     @Override
@@ -66,7 +84,13 @@ public class CompanyServiceImpl implements CompanyService {
         existingCompany.setFoundedYear(updatedCompany.getFoundedYear());
         existingCompany.setWebsite(updatedCompany.getWebsite());
 
-        return companyRepository.save(existingCompany);
+        Company result = companyRepository.save(existingCompany);
+
+        // Обновляем кэш
+        String cacheKey = CACHE_COMPANY_PREFIX + id;
+        companyCache.put(cacheKey, result);
+
+        return result;
     }
 
     @Override
@@ -74,6 +98,11 @@ public class CompanyServiceImpl implements CompanyService {
     public boolean deleteCompany(Long id) {
         if (companyRepository.existsById(id)) {
             companyRepository.deleteById(id);
+
+            // Удаляем из кэша
+            String cacheKey = CACHE_COMPANY_PREFIX + id;
+            companyCache.remove(cacheKey);
+
             return true;
         }
         return false;
@@ -91,7 +120,13 @@ public class CompanyServiceImpl implements CompanyService {
 
         company.getGames().add(game);
 
-        return companyRepository.save(company);
+        Company result = companyRepository.save(company);
+
+        // Обновляем кэш
+        String cacheKey = CACHE_COMPANY_PREFIX + companyId;
+        companyCache.put(cacheKey, result);
+
+        return result;
     }
 
     @Override
@@ -113,7 +148,11 @@ public class CompanyServiceImpl implements CompanyService {
 
         boolean removed = company.getGames().remove(game);
         if (removed) {
-            companyRepository.save(company);
+            Company result = companyRepository.save(company);
+
+            // Обновляем кэш
+            String cacheKey = CACHE_COMPANY_PREFIX + companyId;
+            companyCache.put(cacheKey, result);
         }
 
         return removed;

@@ -3,7 +3,6 @@ package com.gamelib.gamelib.model;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -50,7 +49,8 @@ public class Game {
 
     private String genre;
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(cascade
+            = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
     @JoinTable(
             name = "game_company",
             joinColumns = @JoinColumn(name = "game_id"),

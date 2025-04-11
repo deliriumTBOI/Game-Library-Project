@@ -1,5 +1,6 @@
 package com.gamelib.gamelib.service.impl;
 
+import com.gamelib.gamelib.cache.LruCache;
 import com.gamelib.gamelib.exception.ResourceNotFoundException;
 import com.gamelib.gamelib.model.Game;
 import com.gamelib.gamelib.model.Review;
@@ -13,8 +14,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ReviewServiceImpl implements ReviewService {
+    private static final String CACHE_REVIEW_PREFIX = "review:id:";
+
     private final ReviewRepository reviewRepository;
     private final GameRepository gameRepository;
+    private final LruCache<String, Review> reviewCache = new LruCache<>(50000, 100, "ReviewCache");
 
     public ReviewServiceImpl(ReviewRepository reviewRepository, GameRepository gameRepository) {
         this.reviewRepository = reviewRepository;
@@ -34,7 +38,21 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     public Optional<Review> getReviewById(Long id) {
-        return reviewRepository.findById(id);
+        String cacheKey = CACHE_REVIEW_PREFIX + id;
+
+        // Проверяем наличие в кэше
+        if (reviewCache.containsKey(cacheKey)) {
+            Review cachedReview = reviewCache.get(cacheKey);
+            return Optional.ofNullable(cachedReview);
+        }
+
+        // Если нет в кэше, получаем из репозитория
+        Optional<Review> reviewOpt = reviewRepository.findById(id);
+
+        // Если обзор найден, сохраняем в кэш
+        reviewOpt.ifPresent(review -> reviewCache.put(cacheKey, review));
+
+        return reviewOpt;
     }
 
     @Override
@@ -62,7 +80,13 @@ public class ReviewServiceImpl implements ReviewService {
         existingReview.setText(updatedReview.getText());
         existingReview.setAuthor(updatedReview.getAuthor());
 
-        return reviewRepository.save(existingReview);
+        Review result = reviewRepository.save(existingReview);
+
+        // Обновляем кэш
+        String cacheKey = CACHE_REVIEW_PREFIX + id;
+        reviewCache.put(cacheKey, result);
+
+        return result;
     }
 
     @Override
@@ -83,6 +107,11 @@ public class ReviewServiceImpl implements ReviewService {
         }
 
         reviewRepository.deleteById(id);
+
+        // Удаляем из кэша
+        String cacheKey = CACHE_REVIEW_PREFIX + id;
+        reviewCache.remove(cacheKey);
+
         return true;
     }
 }

@@ -21,4 +21,10 @@ public interface GameService {
     Game addCompanyToGame(Long gameId, Long companyId);
 
     boolean removeCompanyFromGame(Long gameId, Long companyId);
+
+    List<Game> getGamesByMinimumRating(Integer minRating);
+
+    List<Game> getGamesByRatingRange(Integer minRating, Integer maxRating);
+
+    void clearCache();
 }
