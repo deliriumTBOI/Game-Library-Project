@@ -37,7 +37,7 @@ public class GameServiceImpl implements GameService {
             throw new ResourceAlreadyExistsException("Game is already exist");
         }
         Game createdGame = gameRepository.save(game);
-        clearQueryCaches();
+        clearCache();
         return createdGame;
     }
 
@@ -88,7 +88,7 @@ public class GameServiceImpl implements GameService {
         }
 
         Game result = gameRepository.save(existingGame);
-        clearQueryCaches();
+        clearCache();
         return result;
     }
 
@@ -133,7 +133,7 @@ public class GameServiceImpl implements GameService {
         }
 
         Game result = gameRepository.save(existingGame);
-        clearQueryCaches();
+        clearCache();
         return result;
     }
 
@@ -142,7 +142,7 @@ public class GameServiceImpl implements GameService {
     public boolean deleteGame(Long id) {
         if (gameRepository.existsById(id)) {
             gameRepository.deleteById(id);
-            clearQueryCaches();
+            clearCache();
             return true;
         }
         return false;
@@ -223,15 +223,6 @@ public class GameServiceImpl implements GameService {
 
     @Override
     public void clearCache() {
-        gameCache.clear();
-    }
-
-    /**
-     * Очищает только кеши для запросов, связанных с рейтингами
-     */
-    private void clearQueryCaches() {
-        // Более селективный подход: чистим только кеши запросов,
-        // так как изменения в играх могут повлиять на результаты запросов по рейтингам
         gameCache.clear();
     }
 }

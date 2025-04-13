@@ -163,7 +163,7 @@ public class LruCache<K, V> {
     }
 
     private String truncateIfNeeded(String str) {
-        int maxLength = 100; // Максимальная длина для логирования
+        int maxLength = 100;
         if (str.length() <= maxLength) {
             return str;
         }

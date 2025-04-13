@@ -4,6 +4,14 @@ import com.gamelib.gamelib.dto.GameDto;
 import com.gamelib.gamelib.mapper.GameMapper;
 import com.gamelib.gamelib.model.Game;
 import com.gamelib.gamelib.service.GameService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import java.util.List;
 import org.hibernate.Hibernate;
 import org.springframework.http.HttpStatus;
@@ -23,6 +31,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/games")
+@Tag(name = "Games", description = "API для управления играми")
 public class GameController {
     private final GameService gameService;
     private final GameMapper gameMapper;
@@ -34,7 +43,16 @@ public class GameController {
 
     @GetMapping
     @Transactional(readOnly = true)
-    public ResponseEntity<List<GameDto>> getGames(@RequestParam(required = false) String title) {
+    @Operation(summary = "Получить список игр", description = "Возвращает список "
+            + "всех игр или игр, соответствующих указанному названию")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Список игр успешно получен",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = GameDto.class)))
+    })
+    public ResponseEntity<List<GameDto>> getGames(
+            @Parameter(description = "Название игры (опционально)")
+            @RequestParam(required = false) String title) {
         List<Game> games;
 
         if (title != null && !title.isEmpty()) {
@@ -56,7 +74,16 @@ public class GameController {
 
     @GetMapping("/{id}")
     @Transactional(readOnly = true)
-    public ResponseEntity<GameDto> getGameById(@PathVariable Long id) {
+    @Operation(summary = "Получить игру по ID", description = "Возвращает игру по указанному ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Игра успешно найдена",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = GameDto.class))),
+        @ApiResponse(responseCode = "404", description = "Игра не найдена",
+                    content = @Content)
+    })
+    public ResponseEntity<GameDto> getGameById(
+            @Parameter(description = "ID игры", required = true) @PathVariable Long id) {
         Game game = gameService.getGameById(id);
         if (game != null) {
 
@@ -73,7 +100,20 @@ public class GameController {
     }
 
     @PostMapping
-    public ResponseEntity<GameDto> createGame(@RequestBody GameDto gameDto) {
+    @Operation(summary = "Создать новую игру", description = "Создает новую игру "
+            + "с указанными данными")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Игра успешно создана",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = GameDto.class))),
+        @ApiResponse(responseCode = "400", description = "Некорректные данные для создания игры",
+                    content = @Content),
+        @ApiResponse(responseCode = "409", description = "Игра с таким названием уже существует",
+                    content = @Content)
+    })
+    public ResponseEntity<GameDto> createGame(
+            @Parameter(description = "Данные новой игры", required = true)
+            @Valid @RequestBody GameDto gameDto) {
         try {
             Game game = gameMapper.toEntity(gameDto);
             Game createdGame = gameService.createGame(game);
@@ -89,7 +129,20 @@ public class GameController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<GameDto> updateGame(@PathVariable Long id, @RequestBody GameDto gameDto) {
+    @Operation(summary = "Обновить игру", description = "Полное обновление игры по указанному ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Игра успешно обновлена",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = GameDto.class))),
+        @ApiResponse(responseCode = "404", description = "Игра не найдена",
+                    content = @Content),
+        @ApiResponse(responseCode = "400", description = "Некорректные данные для обновления игры",
+                    content = @Content)
+    })
+    public ResponseEntity<GameDto> updateGame(
+            @Parameter(description = "ID игры", required = true) @PathVariable Long id,
+            @Parameter(description = "Обновленные данные игры", required = true)
+            @Valid @RequestBody GameDto gameDto) {
         Game game = gameMapper.toEntity(gameDto);
         Game updatedGame = gameService.updateGame(id, game);
         return updatedGame != null ? ResponseEntity.ok(gameMapper.toDto(updatedGame)) :
@@ -97,7 +150,21 @@ public class GameController {
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<GameDto> patchGame(@PathVariable Long id, @RequestBody GameDto gameDto) {
+    @Operation(summary = "Частично обновить игру", description = "Частичное обновление "
+            + "игры по указанному ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Игра успешно обновлена",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = GameDto.class))),
+        @ApiResponse(responseCode = "404", description = "Игра не найдена",
+                    content = @Content),
+        @ApiResponse(responseCode = "400", description = "Некорректные данные для обновления игры",
+                    content = @Content)
+    })
+    public ResponseEntity<GameDto> patchGame(
+            @Parameter(description = "ID игры", required = true) @PathVariable Long id,
+            @Parameter(description = "Частичные данные для обновления", required = true)
+            @RequestBody GameDto gameDto) {
         Game game = gameMapper.toEntity(gameDto);
         Game updatedGame = gameService.patchGame(id, game);
         if (updatedGame != null) {
@@ -108,14 +175,30 @@ public class GameController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteGame(@PathVariable Long id) {
+    @Operation(summary = "Удалить игру", description = "Удаляет игру по указанному ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "Игра успешно удалена"),
+        @ApiResponse(responseCode = "404", description = "Игра не найдена")
+    })
+    public ResponseEntity<Void> deleteGame(
+            @Parameter(description = "ID игры для удаления", required = true)
+            @PathVariable Long id) {
         boolean isDeleted = gameService.deleteGame(id);
         return isDeleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
     }
 
     @PostMapping("/{gameId}/companies/{companyId}")
-    public ResponseEntity<GameDto> addCompanyToGame(@PathVariable Long gameId,
-                                                    @PathVariable Long companyId) {
+    @Operation(summary = "Добавить компанию к игре",
+            description = "Добавляет связь между игрой и компанией")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Компания успешно добавлена к игре",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = GameDto.class))),
+        @ApiResponse(responseCode = "404", description = "Игра или компания не найдена")
+    })
+    public ResponseEntity<GameDto> addCompanyToGame(
+            @Parameter(description = "ID игры", required = true) @PathVariable Long gameId,
+            @Parameter(description = "ID компании", required = true) @PathVariable Long companyId) {
         Game updatedGame = gameService.addCompanyToGame(gameId, companyId);
         if (updatedGame != null) {
             return ResponseEntity.ok(gameMapper.toDto(updatedGame));
@@ -126,13 +209,16 @@ public class GameController {
 
     @GetMapping("/by-rating")
     @Transactional(readOnly = true)
+    @Operation(summary = "Получить игры по рейтингу",
+            description = "Возвращает игры с указанным минимальным/максимальным рейтингом")
     public ResponseEntity<List<GameDto>> getGamesByRating(
+            @Parameter(description = "Минимальный рейтинг")
             @RequestParam(required = false) Integer minRating,
+            @Parameter(description = "Максимальный рейтинг")
             @RequestParam(required = false) Integer maxRating) {
 
         List<Game> games;
 
-        // Если указаны оба параметра - используем диапазон
         if (minRating != null && maxRating != null) {
             games = gameService.getGamesByRatingRange(minRating, maxRating);
         } else if (minRating != null) {
@@ -141,7 +227,6 @@ public class GameController {
             games = gameService.getAllGames();
         }
 
-        // Инициализируем связанные сущности для корректной сериализации
         games.forEach(game -> {
             if (game.getCompanies() != null) {
                 Hibernate.initialize(game.getCompanies());
@@ -154,16 +239,16 @@ public class GameController {
         return ResponseEntity.ok(gameMapper.toDtoList(games));
     }
 
-    // Дополнительный метод для очистки кэша (опционально)
-    @DeleteMapping("/cache")
-    public ResponseEntity<Void> clearCache() {
-        gameService.clearCache();
-        return ResponseEntity.noContent().build();
-    }
-
     @DeleteMapping("/{gameId}/companies/{companyId}")
-    public ResponseEntity<Void> removeCompanyFromGame(@PathVariable Long gameId,
-                                                      @PathVariable Long companyId) {
+    @Operation(summary = "Удалить компанию из игры",
+            description = "Удаляет связь между игрой и компанией")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "Связь успешно удалена"),
+        @ApiResponse(responseCode = "404", description = "Игра или компания не найдена")
+    })
+    public ResponseEntity<Void> removeCompanyFromGame(
+            @Parameter(description = "ID игры", required = true) @PathVariable Long gameId,
+            @Parameter(description = "ID компании", required = true) @PathVariable Long companyId) {
         boolean removed = gameService.removeCompanyFromGame(gameId, companyId);
         return removed ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
     }

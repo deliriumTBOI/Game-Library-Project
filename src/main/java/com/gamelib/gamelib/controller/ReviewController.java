@@ -4,6 +4,14 @@ import com.gamelib.gamelib.dto.ReviewDto;
 import com.gamelib.gamelib.mapper.ReviewMapper;
 import com.gamelib.gamelib.model.Review;
 import com.gamelib.gamelib.service.ReviewService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.http.HttpStatus;
@@ -19,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/games/{gameId}/reviews")
+@Tag(name = "Reviews", description = "API для управления отзывами на игры")
 public class ReviewController {
     private final ReviewService reviewService;
     private final ReviewMapper reviewMapper;
@@ -29,23 +38,55 @@ public class ReviewController {
     }
 
     @PostMapping
-    public ResponseEntity<ReviewDto> createReview(@PathVariable Long gameId,
-                                                  @RequestBody ReviewDto reviewDto) {
+    @Operation(summary = "Создать новый отзыв", description = "Создает новый отзыв"
+            + " для указанной игры")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Отзыв успешно создан",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ReviewDto.class))),
+        @ApiResponse(responseCode = "400", description = "Некорректные данные для создания отзыва",
+                    content = @Content),
+        @ApiResponse(responseCode = "404", description = "Игра не найдена",
+                    content = @Content)
+    })
+    public ResponseEntity<ReviewDto> createReview(
+            @Parameter(description = "ID игры", required = true) @PathVariable Long gameId,
+            @Parameter(description = "Данные нового отзыва", required = true)
+            @Valid @RequestBody ReviewDto reviewDto) {
         Review review = reviewMapper.toEntity(reviewDto);
         Review createdReview = reviewService.createReview(gameId, review);
         return new ResponseEntity<>(reviewMapper.toDto(createdReview), HttpStatus.CREATED);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ReviewDto> getReviewById(@PathVariable Long id,
-                                                   @PathVariable String gameId) {
+    @Operation(summary = "Получить отзыв по ID", description = "Возвращает отзыв по указанному ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Отзыв успешно найден",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ReviewDto.class))),
+        @ApiResponse(responseCode = "404", description = "Отзыв не найден",
+                    content = @Content)
+    })
+    public ResponseEntity<ReviewDto> getReviewById(
+            @Parameter(description = "ID отзыва", required = true) @PathVariable Long id,
+            @Parameter(description = "ID игры", required = true) @PathVariable String gameId) {
         Optional<Review> review = reviewService.getReviewById(id);
         return review.map(r -> ResponseEntity.ok(reviewMapper.toDto(r)))
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping
-    public ResponseEntity<List<ReviewDto>> getReviewsByGameId(@PathVariable Long gameId) {
+    @Operation(summary = "Получить все отзывы для игры", description = "Возвращает список "
+            + "всех отзывов для указанной игры")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Список отзывов успешно получен",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ReviewDto.class))),
+        @ApiResponse(responseCode = "404", description = "Игра не найдена",
+                    content = @Content)
+    })
+    public ResponseEntity<List<ReviewDto>> getReviewsByGameId(
+            @Parameter(description = "ID игры", required = true) @PathVariable Long gameId) {
         List<Review> reviews = reviewService.getReviewsByGameId(gameId);
         List<ReviewDto> reviewDtos = reviews.stream()
                 .map(reviewMapper::toDto)
@@ -54,9 +95,22 @@ public class ReviewController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ReviewDto> updateReview(@PathVariable Long gameId,
-                                                  @PathVariable Long id,
-                                                  @RequestBody ReviewDto reviewDto) {
+    @Operation(summary = "Обновить отзыв", description = "Обновляет отзыв по указанному ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Отзыв успешно обновлен",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ReviewDto.class))),
+        @ApiResponse(responseCode = "404", description = "Отзыв или игра не найдены",
+                    content = @Content),
+        @ApiResponse(responseCode = "400", description = "Некорректные данные "
+                + "для обновления отзыва",
+                    content = @Content)
+    })
+    public ResponseEntity<ReviewDto> updateReview(
+            @Parameter(description = "ID игры", required = true) @PathVariable Long gameId,
+            @Parameter(description = "ID отзыва", required = true) @PathVariable Long id,
+            @Parameter(description = "Обновленные данные отзыва", required = true)
+            @Valid @RequestBody ReviewDto reviewDto) {
         Review review = reviewMapper.toEntity(reviewDto);
         Review updatedReview = reviewService.updateReview(gameId, id, review);
         if (updatedReview != null) {
@@ -67,7 +121,16 @@ public class ReviewController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteReview(@PathVariable Long gameId, @PathVariable Long id) {
+    @Operation(summary = "Удалить отзыв", description = "Удаляет отзыв по указанному ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "Отзыв успешно удален"),
+        @ApiResponse(responseCode = "404", description = "Отзыв или игра не найдены",
+                    content = @Content)
+    })
+    public ResponseEntity<Void> deleteReview(
+            @Parameter(description = "ID игры", required = true) @PathVariable Long gameId,
+            @Parameter(description = "ID отзыва для удаления", required = true)
+            @PathVariable Long id) {
         boolean deleted = reviewService.deleteReview(gameId, id);
         return deleted ? new ResponseEntity<>(HttpStatus.NO_CONTENT) :
                 ResponseEntity.notFound().build();
