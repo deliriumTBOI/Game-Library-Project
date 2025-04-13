@@ -11,7 +11,7 @@ import org.springframework.stereotype.Repository;
 public interface GameRepository extends JpaRepository<Game, Long> {
     boolean existsByTitle(String title);
 
-    List<Game> findByTitleContainingIgnoreCase(String title);
+    List<Game> findByTitleIgnoreCase(String title);
 
     // JPQL запрос для получения игр по минимальному рейтингу отзывов
     @Query("SELECT DISTINCT g FROM Game g JOIN g.reviews r WHERE r.rating >= :minRating")

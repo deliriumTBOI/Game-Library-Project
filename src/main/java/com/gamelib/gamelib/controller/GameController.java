@@ -1,6 +1,7 @@
 package com.gamelib.gamelib.controller;
 
 import com.gamelib.gamelib.dto.GameDto;
+import com.gamelib.gamelib.exception.InvalidInputException;
 import com.gamelib.gamelib.mapper.GameMapper;
 import com.gamelib.gamelib.model.Game;
 import com.gamelib.gamelib.service.GameService;
@@ -43,20 +44,25 @@ public class GameController {
 
     @GetMapping
     @Transactional(readOnly = true)
-    @Operation(summary = "Получить список игр", description = "Возвращает список "
-            + "всех игр или игр, соответствующих указанному названию")
+    @Operation(summary = "Получить список игр", description = "Возвращает список всех игр или игр, "
+            + "соответствующих указанному названию")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Список игр успешно получен",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = GameDto.class)))
+                            schema = @Schema(implementation = GameDto.class))),
+        @ApiResponse(responseCode = "400", description = "Название игры не найдено")
     })
     public ResponseEntity<List<GameDto>> getGames(
             @Parameter(description = "Название игры (опционально)")
             @RequestParam(required = false) String title) {
+
         List<Game> games;
 
         if (title != null && !title.isEmpty()) {
             games = gameService.getGamesByTitle(title);
+            if (games.isEmpty()) {
+                throw new InvalidInputException("Title not found");
+            }
         } else {
             games = gameService.getAllGames();
         }
@@ -69,6 +75,7 @@ public class GameController {
                 Hibernate.initialize(game.getReviews());
             }
         });
+
         return ResponseEntity.ok(gameMapper.toDtoList(games));
     }
 
