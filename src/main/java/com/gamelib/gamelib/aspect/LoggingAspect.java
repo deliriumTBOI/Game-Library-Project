@@ -44,29 +44,39 @@ public class LoggingAspect {
     }
 
     private Object logAround(ProceedingJoinPoint joinPoint, String type) throws Throwable {
-        log.info("Enter: {}.{}() with argument[s] = {}",
-                joinPoint.getSignature().getDeclaringTypeName(),
-                joinPoint.getSignature().getName(),
-                Arrays.toString(joinPoint.getArgs()));
+        if (log.isInfoEnabled()) {
+            log.info("[{}] Enter: {}.{}() with argument[s] = {}",
+                    type,
+                    joinPoint.getSignature().getDeclaringTypeName(),
+                    joinPoint.getSignature().getName(),
+                    Arrays.toString(joinPoint.getArgs()));
+        }
 
         try {
             Object result = joinPoint.proceed();
-            log.info("Exit: {}.{}() completed successfully",
-                    joinPoint.getSignature().getDeclaringTypeName(),
-                    joinPoint.getSignature().getName());
+
+            if (log.isInfoEnabled()) {
+                log.info("[{}] Exit: {}.{}() completed successfully",
+                        type,
+                        joinPoint.getSignature().getDeclaringTypeName(),
+                        joinPoint.getSignature().getName());
+            }
 
             if (log.isDebugEnabled()) {
-                log.debug("Result: {}",
-                        result);
+                log.debug("[{}] Result: {}", type, result);
             }
 
             return result;
         } catch (IllegalArgumentException e) {
-            log.error("Illegal argument: {} in {}.{}()",
-                    Arrays.toString(joinPoint.getArgs()),
-                    joinPoint.getSignature().getDeclaringTypeName(),
-                    joinPoint.getSignature().getName());
+            if (log.isErrorEnabled()) {
+                log.error("[{}] Illegal argument: {} in {}.{}()",
+                        type,
+                        Arrays.toString(joinPoint.getArgs()),
+                        joinPoint.getSignature().getDeclaringTypeName(),
+                        joinPoint.getSignature().getName());
+            }
             throw e;
         }
     }
+
 }

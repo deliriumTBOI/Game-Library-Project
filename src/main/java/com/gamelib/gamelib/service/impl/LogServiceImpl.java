@@ -1,5 +1,6 @@
 package com.gamelib.gamelib.service.impl;
 
+import com.gamelib.gamelib.exception.LogProcessingException;
 import com.gamelib.gamelib.exception.ResourceNotFoundException;
 import com.gamelib.gamelib.service.LogService;
 import java.io.BufferedReader;
@@ -64,7 +65,7 @@ public class LogServiceImpl implements LogService {
                     // Ignore exception during cleanup
                 }
             }
-            throw new RuntimeException("Error processing log file: " + e.getMessage(), e);
+            throw new LogProcessingException("Error processing log file: " + e.getMessage(), e);
         }
     }
 }
