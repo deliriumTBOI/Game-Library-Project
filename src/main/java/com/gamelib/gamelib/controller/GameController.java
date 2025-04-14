@@ -224,7 +224,16 @@ public class GameController {
             @Parameter(description = "Максимальный рейтинг")
             @RequestParam(required = false) Integer maxRating) {
 
-        // Валидация рейтинга
+        validateRatingRange(minRating, maxRating);
+
+        List<Game> games = fetchGamesByRating(minRating, maxRating);
+
+        initializeGameRelations(games);
+
+        return ResponseEntity.ok(gameMapper.toDtoList(games));
+    }
+
+    private void validateRatingRange(Integer minRating, Integer maxRating) {
         if (minRating != null && (minRating < 0 || minRating > 10)) {
             throw new InvalidInputException("Minimum rating must be between 0 and 10");
         }
@@ -233,21 +242,24 @@ public class GameController {
             throw new InvalidInputException("Maximum rating must be between 0 and 10");
         }
 
-        // Проверка валидности диапазона
         if (minRating != null && maxRating != null && minRating > maxRating) {
             throw new InvalidInputException("Minimum rating cannot be greater than maximum rating");
         }
+    }
 
-        List<Game> games;
-
+    private List<Game> fetchGamesByRating(Integer minRating, Integer maxRating) {
         if (minRating != null && maxRating != null) {
-            games = gameService.getGamesByRatingRange(minRating, maxRating);
-        } else if (minRating != null) {
-            games = gameService.getGamesByMinimumRating(minRating);
-        } else {
-            games = gameService.getAllGames();
+            return gameService.getGamesByRatingRange(minRating, maxRating);
         }
 
+        if (minRating != null) {
+            return gameService.getGamesByMinimumRating(minRating);
+        }
+
+        return gameService.getAllGames();
+    }
+
+    private void initializeGameRelations(List<Game> games) {
         games.forEach(game -> {
             if (game.getCompanies() != null) {
                 Hibernate.initialize(game.getCompanies());
@@ -256,8 +268,6 @@ public class GameController {
                 Hibernate.initialize(game.getReviews());
             }
         });
-
-        return ResponseEntity.ok(gameMapper.toDtoList(games));
     }
 
     @DeleteMapping("/{gameId}/companies/{companyId}")
