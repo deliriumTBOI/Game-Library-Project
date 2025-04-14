@@ -224,6 +224,20 @@ public class GameController {
             @Parameter(description = "Максимальный рейтинг")
             @RequestParam(required = false) Integer maxRating) {
 
+        // Валидация рейтинга
+        if (minRating != null && (minRating < 0 || minRating > 10)) {
+            throw new InvalidInputException("Minimum rating must be between 0 and 10");
+        }
+
+        if (maxRating != null && (maxRating < 0 || maxRating > 10)) {
+            throw new InvalidInputException("Maximum rating must be between 0 and 10");
+        }
+
+        // Проверка валидности диапазона
+        if (minRating != null && maxRating != null && minRating > maxRating) {
+            throw new InvalidInputException("Minimum rating cannot be greater than maximum rating");
+        }
+
         List<Game> games;
 
         if (minRating != null && maxRating != null) {

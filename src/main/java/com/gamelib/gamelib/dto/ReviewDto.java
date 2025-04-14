@@ -1,5 +1,7 @@
 package com.gamelib.gamelib.dto;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -14,6 +16,8 @@ public class ReviewDto {
     private Long id;
 
     @NotNull(message = "Rating cannot be empty")
+    @Min(value = 0, message = "Rating must be between 0 and 10")
+    @Max(value = 10, message = "Rating must be between 0 and 10")
     private Integer rating;
 
     @Size(max = 2000, message = "Review cannot exceed 2000 characters")
