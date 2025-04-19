@@ -10,6 +10,8 @@ import com.gamelib.gamelib.repository.GameRepository;
 import com.gamelib.gamelib.service.CompanyService;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,6 +39,28 @@ public class CompanyServiceImpl implements CompanyService {
         }
         return companyRepository.save(company);
     }
+
+    @Override
+    @Transactional
+    public List<Company> createCompanies(List<Company> companies) {
+        Set<String> incomingNames = companies.stream()
+                .map(Company::getName)
+                .collect(Collectors.toSet());
+
+        List<String> existingNames = companyRepository.findByNameIn(incomingNames)
+                .stream()
+                .map(Company::getName)
+                .toList();
+
+        if (!existingNames.isEmpty()) {
+            throw new ResourceAlreadyExistsException(
+                    "Companies with names: " + String.join(", ", existingNames) + " already exist"
+            );
+        }
+
+        return companyRepository.saveAll(companies);
+    }
+
 
     @Override
     public Optional<Company> getCompanyById(Long id) {

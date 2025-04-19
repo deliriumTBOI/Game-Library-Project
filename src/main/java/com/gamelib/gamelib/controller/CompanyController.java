@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.hibernate.Hibernate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -122,6 +123,29 @@ public class CompanyController {
                         .body("Server Error: " + e.getMessage());
             }
         }
+    }
+
+    @PostMapping("/bulk")
+    @Operation(summary = "Создать несколько компаний", description = "Создает список "
+            + "новых компаний")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Компании успешно созданы",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = CompanyDto.class))),
+        @ApiResponse(responseCode = "400", description = "Некорректные данные "
+                + "для создания компаний",
+                    content = @Content)
+    })
+    public ResponseEntity<List<CompanyDto>> createCompanies(
+            @Valid @RequestBody List<@Valid CompanyDto> companyDtos) {
+        List<Company> companies = companyDtos.stream()
+                .map(companyMapper::toEntity)
+                .collect(Collectors.toList());
+
+        List<Company> createdCompanies = companyService.createCompanies(companies);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(companyMapper.toDtoList(createdCompanies));
     }
 
     @PutMapping("/{id}")

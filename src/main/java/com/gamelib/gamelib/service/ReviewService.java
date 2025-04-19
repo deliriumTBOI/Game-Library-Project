@@ -7,6 +7,8 @@ import java.util.Optional;
 public interface ReviewService {
     Review createReview(Long gameId, Review review);
 
+    List<Review> createReviews(Long gameId, List<Review> reviews);
+
     Optional<Review> getReviewById(Long id);
 
     List<Review> getReviewsByGameId(Long gameId);

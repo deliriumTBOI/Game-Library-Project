@@ -7,6 +7,8 @@ import java.util.Optional;
 public interface CompanyService {
     Company createCompany(Company company);
 
+    List<Company> createCompanies(List<Company> companies);
+
     Optional<Company> getCompanyById(Long id);
 
     List<Company> getAllCompanies();

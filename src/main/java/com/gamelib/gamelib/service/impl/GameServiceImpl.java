@@ -9,7 +9,10 @@ import com.gamelib.gamelib.model.Review;
 import com.gamelib.gamelib.repository.CompanyRepository;
 import com.gamelib.gamelib.repository.GameRepository;
 import com.gamelib.gamelib.service.GameService;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -40,6 +43,43 @@ public class GameServiceImpl implements GameService {
         clearCache();
         return createdGame;
     }
+
+    @Override
+    @Transactional
+    public List<Game> createGames(List<Game> games) {
+        // Проверка существующих игр
+        Set<String> titles = games.stream()
+                .map(Game::getTitle)
+                .collect(Collectors.toSet());
+
+        List<String> existingTitles = gameRepository.findByTitleIn(titles)
+                .stream()
+                .map(Game::getTitle)
+                .collect(Collectors.toList());
+
+        if (!existingTitles.isEmpty()) {
+            throw new ResourceAlreadyExistsException("Games with titles "
+                    + String.join(", ", existingTitles) + " already exist");
+        }
+
+        // Загрузка компаний по имени
+        for (Game game : games) {
+            Set<String> companyNames = game.getCompanies().stream()
+                    .map(Company::getName)
+                    .collect(Collectors.toSet());
+
+            List<Company> attachedCompanies = companyRepository.findByNameIn(companyNames);
+
+            // Связь только с прикреплёнными к контексту entity
+            game.setCompanies(new HashSet<>(attachedCompanies));
+        }
+
+        List<Game> savedGames = gameRepository.saveAll(games);
+        clearCache();
+        return savedGames;
+    }
+
+
 
     @Override
     public List<Game> getAllGames() {

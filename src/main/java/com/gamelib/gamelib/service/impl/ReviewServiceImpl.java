@@ -37,6 +37,21 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
+    @Transactional
+    public List<Review> createReviews(Long gameId, List<Review> reviews) {
+        Game game = gameRepository.findById(gameId)
+                .orElseThrow(() -> new ResourceNotFoundException("Game not found with id: "
+                        + gameId));
+
+        for (Review review : reviews) {
+            review.setGame(game);
+        }
+
+        return reviewRepository.saveAll(reviews);
+    }
+
+
+    @Override
     public Optional<Review> getReviewById(Long id) {
         String cacheKey = CACHE_REVIEW_PREFIX + id;
 

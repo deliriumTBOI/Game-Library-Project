@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -56,6 +57,31 @@ public class ReviewController {
         Review review = reviewMapper.toEntity(reviewDto);
         Review createdReview = reviewService.createReview(gameId, review);
         return new ResponseEntity<>(reviewMapper.toDto(createdReview), HttpStatus.CREATED);
+    }
+
+    @PostMapping("/bulk")
+    @Operation(summary = "Создать несколько отзывов", description = "Создает список "
+            + "новых отзывов для указанной игры")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Отзывы успешно созданы",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ReviewDto.class))),
+        @ApiResponse(responseCode = "400", description = "Некорректные данные для создания отзывов",
+                    content = @Content),
+        @ApiResponse(responseCode = "404", description = "Игра не найдена",
+                    content = @Content)
+    })
+    public ResponseEntity<List<ReviewDto>> createReviews(
+            @PathVariable Long gameId,
+            @Valid @RequestBody List<@Valid ReviewDto> reviewDtos) {
+        List<Review> reviews = reviewDtos.stream()
+                .map(reviewMapper::toEntity)
+                .collect(Collectors.toList());
+
+        List<Review> createdReviews = reviewService.createReviews(gameId, reviews);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(createdReviews.stream().map(reviewMapper::toDto).toList());
     }
 
     @GetMapping("/{id}")

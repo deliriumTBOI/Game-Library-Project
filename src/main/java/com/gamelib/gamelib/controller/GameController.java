@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.hibernate.Hibernate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -133,6 +134,27 @@ public class GameController {
                         "Server Error: " + e.getMessage());
             }
         }
+    }
+
+    @PostMapping("/bulk")
+    @Operation(summary = "Создать несколько игр", description = "Создает список новых игр")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Игры успешно созданы",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = GameDto.class))),
+        @ApiResponse(responseCode = "400", description = "Некорректные данные для создания игр",
+                    content = @Content)
+    })
+    public ResponseEntity<List<GameDto>> createGames(
+            @Valid @RequestBody List<@Valid GameDto> gameDtos) {
+        List<Game> games = gameDtos.stream()
+                .map(gameMapper::toEntity)
+                .collect(Collectors.toList());
+
+        List<Game> createdGames = gameService.createGames(games);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(gameMapper.toDtoList(createdGames));
     }
 
     @PutMapping("/{id}")

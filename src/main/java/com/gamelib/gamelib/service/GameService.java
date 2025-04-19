@@ -6,6 +6,8 @@ import java.util.List;
 public interface GameService {
     Game createGame(Game game);
 
+    List<Game> createGames(List<Game> games);
+
     List<Game> getAllGames();
 
     List<Game> getGamesByTitle(String title);
