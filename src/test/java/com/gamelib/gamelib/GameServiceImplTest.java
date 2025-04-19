@@ -23,7 +23,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class GameServiceImplTest {
+class GameServiceImplTest {
 
     @Mock
     private GameRepository gameRepository;

@@ -14,7 +14,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.hibernate.Hibernate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -149,7 +148,7 @@ public class GameController {
             @Valid @RequestBody List<@Valid GameDto> gameDtos) {
         List<Game> games = gameDtos.stream()
                 .map(gameMapper::toEntity)
-                .collect(Collectors.toList());
+                .toList();
 
         List<Game> createdGames = gameService.createGames(games);
 

@@ -12,18 +12,16 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.Resource;
 import org.springframework.test.util.ReflectionTestUtils;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.LocalDate;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class LogServiceImplTest {
+class LogServiceImplTest {
 
     @TempDir
     Path tempDir;
@@ -93,7 +91,7 @@ public class LogServiceImplTest {
     }
 
     @Test
-    void getLogFileByDate_ShouldHandleFileReadErrors() throws IOException {
+    void getLogFileByDate_ShouldHandleFileReadErrors() {
         // Arrange
         LocalDate date = LocalDate.of(2023, 5, 15);
 
