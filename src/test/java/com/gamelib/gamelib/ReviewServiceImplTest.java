@@ -5,6 +5,8 @@ import com.gamelib.gamelib.cache.LruCache;
 import com.gamelib.gamelib.exception.ResourceNotFoundException;
 import com.gamelib.gamelib.model.Game;
 import com.gamelib.gamelib.model.Review;
+import com.gamelib.gamelib.dto.ReviewDto;
+import com.gamelib.gamelib.mapper.ReviewMapper;
 import com.gamelib.gamelib.repository.GameRepository;
 import com.gamelib.gamelib.repository.ReviewRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,6 +43,8 @@ class ReviewServiceImplTest {
 
     private Game testGame;
     private Review testReview;
+    private ReviewDto testReviewDto;
+    private final ReviewMapper reviewMapper = new ReviewMapper();
 
     @BeforeEach
     void setUp() {
@@ -54,6 +58,13 @@ class ReviewServiceImplTest {
         testReview.setText("Test Review");
         testReview.setAuthor("Test Author");
         testReview.setGame(testGame);
+
+        testReviewDto = new ReviewDto();
+        testReviewDto.setId(1L);
+        testReviewDto.setRating(5);
+        testReviewDto.setText("Test Review");
+        testReviewDto.setAuthor("Test Author");
+        testReviewDto.setGameId(1L);
 
         // Replace the autowired cache with our mock
         ReflectionTestUtils.setField(reviewService, "reviewCache", reviewCache);
@@ -327,5 +338,32 @@ class ReviewServiceImplTest {
         verify(reviewRepository).findById(1L);
         verify(reviewRepository, never()).deleteById(anyLong());
         verify(reviewCache, never()).remove(anyString());
+    }
+
+    @Test
+    void reviewMapper_toDto_ShouldCorrectlyMapReviewToDto() {
+        // Act
+        ReviewDto result = reviewMapper.toDto(testReview);
+
+        // Assert
+        assertEquals(testReview.getId(), result.getId());
+        assertEquals(testReview.getRating(), result.getRating());
+        assertEquals(testReview.getText(), result.getText());
+        assertEquals(testReview.getAuthor(), result.getAuthor());
+        assertEquals(testReview.getGame().getId(), result.getGameId());
+    }
+
+    @Test
+    void reviewMapper_toEntity_ShouldCorrectlyMapDtoToReview() {
+        // Act
+        Review result = reviewMapper.toEntity(testReviewDto);
+
+        // Assert
+        assertEquals(testReviewDto.getId(), result.getId());
+        assertEquals(testReviewDto.getRating(), result.getRating());
+        assertEquals(testReviewDto.getText(), result.getText());
+        assertEquals(testReviewDto.getAuthor(), result.getAuthor());
+
+        assertNull(result.getGame());
     }
 }
