@@ -1,71 +1,76 @@
 package com.gamelib.gamelib.service.impl;
 
-import com.gamelib.gamelib.exception.LogProcessingException;
-import com.gamelib.gamelib.exception.ResourceNotFoundException;
 import com.gamelib.gamelib.service.LogService;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.nio.file.Files;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
+import lombok.Getter;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Service
+@Getter
 public class LogServiceImpl implements LogService {
+    private static final String LOG_FILE_PATH = "logs/gamelib.log";
+    private static final String LOGS_DIR = "logs/";
 
-    @Value("${logging.file.name}")
-    private String logFileName;
+    private final Map<String, String> logFiles = new ConcurrentHashMap<>();
+    private final Map<String, String> taskStatus = new ConcurrentHashMap<>();
 
     @Override
-    public Resource getLogFileByDate(LocalDate date) {
-        String datePattern = date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-        String dateRegex = "^" + datePattern + ".*";
-        Pattern pattern = Pattern.compile(dateRegex);
+    @Async
+    public CompletableFuture<String> generateLogFileForDateAsync(String date) {
+        String taskId = UUID.randomUUID().toString();
+        taskStatus.put(taskId, "PROCESSING");
 
-        File tempFile = null;
+        CompletableFuture.runAsync(() -> {
+            try {
+                Thread.sleep(20000);
 
-        try {
-            tempFile = File.createTempFile("gamelib-" + datePattern, ".log");
-            BufferedReader reader = new BufferedReader(new FileReader(logFileName));
-            FileWriter writer = new FileWriter(tempFile);
-
-            String line;
-            boolean hasLogs = false;
-
-            while ((line = reader.readLine()) != null) {
-                Matcher matcher = pattern.matcher(line);
-                if (matcher.find()) {
-                    writer.write(line + System.lineSeparator());
-                    hasLogs = true;
+                Path sourcePath = Paths.get(LOG_FILE_PATH);
+                if (!Files.exists(sourcePath)) {
+                    throw new IllegalStateException("Source log file not found");
                 }
-            }
 
-            reader.close();
-            writer.close();
-
-            if (!hasLogs) {
-                Files.delete(tempFile.toPath());
-                throw new ResourceNotFoundException("No logs found for date: " + datePattern);
-            }
-
-            return new FileSystemResource(tempFile);
-        } catch (IOException e) {
-            if (tempFile != null && tempFile.exists()) {
-                try {
-                    Files.delete(tempFile.toPath());
-                } catch (IOException ex) {
-                    // Ignore exception during cleanup
+                List<String> filteredLines;
+                try (Stream<String> lines = Files.lines(sourcePath)) {
+                    filteredLines = lines
+                            .filter(line -> line.startsWith(date))
+                            .toList();
                 }
+
+                if (filteredLines.isEmpty()) {
+                    throw new IllegalStateException("No logs found for date");
+                }
+
+                Files.createDirectories(Paths.get(LOGS_DIR));
+                String filename = String.format("%slogs-%s-%s.log", LOGS_DIR, date, taskId);
+                Files.write(Paths.get(filename), filteredLines);
+
+                logFiles.put(taskId, filename);
+                taskStatus.put(taskId, "COMPLETED");
+            } catch (Exception e) {
+                String errorMsg = e.getMessage();
+                taskStatus.put(taskId, "FAILED: " + errorMsg);
             }
-            throw new LogProcessingException("Error processing log file: " + e.getMessage(), e);
-        }
+        });
+
+        return CompletableFuture.completedFuture(taskId);
+    }
+
+    @Override
+    public String getLogFilePath(String taskId) {
+        return logFiles.get(taskId);
+    }
+
+    @Override
+    public String getTaskStatus(String taskId) {
+        return taskStatus.getOrDefault(taskId, "NOT_FOUND");
     }
 }

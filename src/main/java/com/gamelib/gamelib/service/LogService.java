@@ -1,8 +1,11 @@
 package com.gamelib.gamelib.service;
 
-import java.time.LocalDate;
-import org.springframework.core.io.Resource;
+import java.util.concurrent.CompletableFuture;
 
 public interface LogService {
-    Resource getLogFileByDate(LocalDate date);
+    CompletableFuture<String> generateLogFileForDateAsync(String date);
+
+    String getLogFilePath(String taskId);
+
+    String getTaskStatus(String taskId);
 }

@@ -8,7 +8,6 @@ import com.gamelib.gamelib.model.Company;
 import com.gamelib.gamelib.model.Game;
 import com.gamelib.gamelib.repository.CompanyRepository;
 import com.gamelib.gamelib.repository.GameRepository;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,9 +15,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
-
 import java.util.*;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -56,20 +53,16 @@ class CompanyServiceImplTest {
         testGame.setId(1L);
         testGame.setTitle("Test Game");
 
-        // Replace the autowired cache with our mock
         ReflectionTestUtils.setField(companyService, "companyCache", companyCache);
     }
 
     @Test
     void createCompany_ShouldCreateCompany_WhenCompanyDoesNotExist() {
-        // Arrange
         when(companyRepository.existsByName(anyString())).thenReturn(false);
         when(companyRepository.save(any(Company.class))).thenReturn(testCompany);
 
-        // Act
         Company result = companyService.createCompany(testCompany);
 
-        // Assert
         assertEquals(testCompany, result);
         verify(companyRepository).existsByName(testCompany.getName());
         verify(companyRepository).save(testCompany);
@@ -77,10 +70,8 @@ class CompanyServiceImplTest {
 
     @Test
     void createCompany_ShouldThrowResourceAlreadyExistsException_WhenCompanyExists() {
-        // Arrange
         when(companyRepository.existsByName(anyString())).thenReturn(true);
 
-        // Act & Assert
         ResourceAlreadyExistsException exception = assertThrows(ResourceAlreadyExistsException.class,
                 () -> companyService.createCompany(testCompany));
 
@@ -91,17 +82,14 @@ class CompanyServiceImplTest {
 
     @Test
     void createCompanies_ShouldCreateCompanies_WhenCompaniesDoNotExist() {
-        // Arrange
         List<Company> companies = Collections.singletonList(testCompany);
         Set<String> names = Collections.singleton(testCompany.getName());
 
         when(companyRepository.findByNameIn(names)).thenReturn(Collections.emptyList());
         when(companyRepository.saveAll(companies)).thenReturn(companies);
 
-        // Act
         List<Company> result = companyService.createCompanies(companies);
 
-        // Assert
         assertEquals(companies, result);
         verify(companyRepository).findByNameIn(names);
         verify(companyRepository).saveAll(companies);
@@ -109,13 +97,11 @@ class CompanyServiceImplTest {
 
     @Test
     void createCompanies_ShouldThrowResourceAlreadyExistsException_WhenCompanyExists() {
-        // Arrange
         List<Company> companies = Collections.singletonList(testCompany);
         Set<String> names = Collections.singleton(testCompany.getName());
 
         when(companyRepository.findByNameIn(names)).thenReturn(companies);
 
-        // Act & Assert
         ResourceAlreadyExistsException exception = assertThrows(ResourceAlreadyExistsException.class,
                 () -> companyService.createCompanies(companies));
 
@@ -126,15 +112,12 @@ class CompanyServiceImplTest {
 
     @Test
     void getCompanyById_ShouldReturnCachedCompany_WhenCompanyInCache() {
-        // Arrange
         String cacheKey = "company:id:1";
         when(companyCache.containsKey(cacheKey)).thenReturn(true);
         when(companyCache.get(cacheKey)).thenReturn(testCompany);
 
-        // Act
         Optional<Company> result = companyService.getCompanyById(1L);
 
-        // Assert
         assertTrue(result.isPresent());
         assertEquals(testCompany, result.get());
         verify(companyCache).containsKey(cacheKey);
@@ -144,15 +127,12 @@ class CompanyServiceImplTest {
 
     @Test
     void getCompanyById_ShouldReturnCompanyFromRepository_WhenCompanyNotInCache() {
-        // Arrange
         String cacheKey = "company:id:1";
         when(companyCache.containsKey(cacheKey)).thenReturn(false);
         when(companyRepository.findById(1L)).thenReturn(Optional.of(testCompany));
 
-        // Act
         Optional<Company> result = companyService.getCompanyById(1L);
 
-        // Assert
         assertTrue(result.isPresent());
         assertEquals(testCompany, result.get());
         verify(companyCache).containsKey(cacheKey);
@@ -162,35 +142,28 @@ class CompanyServiceImplTest {
 
     @Test
     void getAllCompanies_ShouldReturnAllCompanies() {
-        // Arrange
         List<Company> companies = Collections.singletonList(testCompany);
         when(companyRepository.findAll()).thenReturn(companies);
 
-        // Act
         List<Company> result = companyService.getAllCompanies();
 
-        // Assert
         assertEquals(companies, result);
         verify(companyRepository).findAll();
     }
 
     @Test
     void getCompaniesByName_ShouldReturnCompaniesWithMatchingName() {
-        // Arrange
         List<Company> companies = Collections.singletonList(testCompany);
         when(companyRepository.findByNameContainingIgnoreCase("Test")).thenReturn(companies);
 
-        // Act
         List<Company> result = companyService.getCompaniesByName("Test");
 
-        // Assert
         assertEquals(companies, result);
         verify(companyRepository).findByNameContainingIgnoreCase("Test");
     }
 
     @Test
     void updateCompany_ShouldUpdateCompany_WhenCompanyExists() {
-        // Arrange
         Company updatedCompany = new Company();
         updatedCompany.setName("Updated Company");
         updatedCompany.setDescription("Updated Description");
@@ -201,10 +174,8 @@ class CompanyServiceImplTest {
         when(companyRepository.existsByName("Updated Company")).thenReturn(false);
         when(companyRepository.save(any(Company.class))).thenReturn(testCompany);
 
-        // Act
         Company result = companyService.updateCompany(1L, updatedCompany);
-
-        // Assert
+        
         assertEquals("Updated Company", result.getName());
         assertEquals("Updated Description", result.getDescription());
         assertEquals(2010, result.getFoundedYear());
