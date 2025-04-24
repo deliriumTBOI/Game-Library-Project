@@ -34,8 +34,7 @@ public class LogController {
     @PostMapping("/{date}")
     @Operation(summary = "Создать лог")
     public CompletableFuture<ResponseEntity<Map<String, String>>> generateLogs(
-            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date)
-            throws InterruptedException {
+            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
 
         CompletableFuture<String> future = logService.generateLogFileForDateAsync(date.toString());
 

@@ -55,6 +55,11 @@ public class LogServiceImpl implements LogService {
 
                 logFiles.put(taskId, filename);
                 taskStatus.put(taskId, "COMPLETED");
+
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt(); // ✅ правильный способ обработки
+                taskStatus.put(taskId, "FAILED: Task was interrupted");
+
             } catch (Exception e) {
                 String errorMsg = e.getMessage();
                 taskStatus.put(taskId, "FAILED: " + errorMsg);
@@ -63,6 +68,7 @@ public class LogServiceImpl implements LogService {
 
         return CompletableFuture.completedFuture(taskId);
     }
+
 
     @Override
     public String getLogFilePath(String taskId) {
