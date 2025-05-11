@@ -25,7 +25,7 @@ public class GameServiceImpl implements GameService {
 
     private final GameRepository gameRepository;
     private final CompanyRepository companyRepository;
-    private final LruCache<String, List<Game>> gameCache = new LruCache<>(50000,
+    private final LruCache<String, List<Game>> gameCache = new LruCache<>(5,
             100, "GameCache");
 
     public GameServiceImpl(GameRepository gameRepository, CompanyRepository companyRepository) {
@@ -100,54 +100,48 @@ public class GameServiceImpl implements GameService {
     @Override
     @Transactional
     public Game updateGame(Long id, Game updatedGame) {
-        Game existingGame = gameRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(GAME_NOT_FOUND_WITH_ID + id));
-
-        if (!existingGame.getTitle().equals(updatedGame.getTitle())
-                && gameRepository.existsByTitle(updatedGame.getTitle())) {
-            throw new ResourceAlreadyExistsException("Game with title "
-                    + updatedGame.getTitle() + " already exists");
+        Game existingGame = getGameById(id);
+        if (existingGame == null) {
+            return null;
         }
 
+        // Keep the reviews from the existing game
+        List<Review> existingReviews = existingGame.getReviews();
+
+        // Update the properties
         existingGame.setTitle(updatedGame.getTitle());
         existingGame.setDescription(updatedGame.getDescription());
         existingGame.setReleaseDate(updatedGame.getReleaseDate());
         existingGame.setGenre(updatedGame.getGenre());
 
-        if (updatedGame.getCompanies() != null) {
-            existingGame.getCompanies().clear();
-            existingGame.getCompanies().addAll(updatedGame.getCompanies());
+        // Handle companies if present in the update
+        if (updatedGame.getCompanies() != null && !updatedGame.getCompanies().isEmpty()) {
+            existingGame.setCompanies(updatedGame.getCompanies());
         }
 
-        if (updatedGame.getReviews() != null) {
-            existingGame.getReviews().clear();
-            for (Review review : updatedGame.getReviews()) {
-                review.setGame(existingGame);
-                existingGame.getReviews().add(review);
-            }
-        }
+        // Keep the existing reviews - this is the key part
+        existingGame.setReviews(existingReviews);
 
-        Game result = gameRepository.save(existingGame);
-        clearCache();
-        return result;
+        return gameRepository.save(existingGame);
     }
 
     @Override
     @Transactional
     public Game patchGame(Long id, Game partialGame) {
-        Game existingGame = gameRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(GAME_NOT_FOUND_WITH_ID + id));
+        Game existingGame = getGameById(id);
+        if (existingGame == null) {
+            return null;
+        }
 
-        if (StringUtils.hasText(partialGame.getTitle())) {
-            if (!existingGame.getTitle().equals(partialGame.getTitle())
-                    && gameRepository.existsByTitle(partialGame.getTitle())) {
-                throw new ResourceAlreadyExistsException("Game with title "
-                        + partialGame.getTitle() + " already exists");
-            }
+        // Keep the existing reviews
+        List<Review> existingReviews = existingGame.getReviews();
+
+        // Apply any non-null fields from the partial update
+        if (partialGame.getTitle() != null) {
             existingGame.setTitle(partialGame.getTitle());
         }
 
-        if (StringUtils.hasText(partialGame.getDescription())) {
+        if (partialGame.getDescription() != null) {
             existingGame.setDescription(partialGame.getDescription());
         }
 
@@ -155,26 +149,19 @@ public class GameServiceImpl implements GameService {
             existingGame.setReleaseDate(partialGame.getReleaseDate());
         }
 
-        if (StringUtils.hasText(partialGame.getGenre())) {
+        if (partialGame.getGenre() != null) {
             existingGame.setGenre(partialGame.getGenre());
         }
 
-        if (partialGame.getCompanies() != null) {
-            existingGame.getCompanies().clear();
-            existingGame.getCompanies().addAll(partialGame.getCompanies());
+        // Handle companies if present in the update
+        if (partialGame.getCompanies() != null && !partialGame.getCompanies().isEmpty()) {
+            existingGame.setCompanies(partialGame.getCompanies());
         }
 
-        if (partialGame.getReviews() != null) {
-            existingGame.getReviews().clear();
-            for (Review review : partialGame.getReviews()) {
-                review.setGame(existingGame);
-                existingGame.getReviews().add(review);
-            }
-        }
+        // Ensure we keep the reviews
+        existingGame.setReviews(existingReviews);
 
-        Game result = gameRepository.save(existingGame);
-        clearCache();
-        return result;
+        return gameRepository.save(existingGame);
     }
 
     @Override

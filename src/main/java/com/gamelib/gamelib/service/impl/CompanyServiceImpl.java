@@ -23,7 +23,7 @@ public class CompanyServiceImpl implements CompanyService {
 
     private final CompanyRepository companyRepository;
     private final GameRepository gameRepository;
-    private final LruCache<String, Company> companyCache = new LruCache<>(50000,
+    private final LruCache<String, Company> companyCache = new LruCache<>(5,
             100, "CompanyCache");
 
     public CompanyServiceImpl(CompanyRepository companyRepository, GameRepository gameRepository) {

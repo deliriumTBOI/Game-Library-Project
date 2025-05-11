@@ -18,7 +18,7 @@ public class ReviewServiceImpl implements ReviewService {
 
     private final ReviewRepository reviewRepository;
     private final GameRepository gameRepository;
-    private final LruCache<String, Review> reviewCache = new LruCache<>(50000, 100, "ReviewCache");
+    private final LruCache<String, Review> reviewCache = new LruCache<>(5, 100, "ReviewCache");
 
     public ReviewServiceImpl(ReviewRepository reviewRepository, GameRepository gameRepository) {
         this.reviewRepository = reviewRepository;

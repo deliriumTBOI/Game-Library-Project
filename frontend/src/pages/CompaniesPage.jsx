@@ -68,6 +68,8 @@ const CompaniesPage = () => {
     const navigate = useNavigate();
     const [filteredCompanies, setFilteredCompanies] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
+    const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
+    const [companyToDelete, setCompanyToDelete] = useState(null);
 
     useEffect(() => {
         fetchCompanies();
@@ -84,6 +86,29 @@ const CompaniesPage = () => {
             console.error(err);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const showDeleteConfirm = (company) => {
+        setCompanyToDelete(company);
+        setDeleteConfirmVisible(true);
+    };
+
+    const handleDeleteConfirm = async () => {
+        try {
+            if (!companyToDelete?.id) {
+                message.error('Company ID is missing');
+                return;
+            }
+            await CompanyService.deleteCompany(companyToDelete.id);
+            message.success('Company deleted successfully');
+            fetchCompanies(); // Refresh the list
+        } catch (err) {
+            message.error('Failed to delete company');
+            console.error(err);
+        } finally {
+            setDeleteConfirmVisible(false);
+            setCompanyToDelete(null);
         }
     };
 
@@ -191,6 +216,17 @@ const CompaniesPage = () => {
                                 }}
                             >
                                 More
+                            </Button>,
+                            <Button
+                                danger
+                                onClick={() => showDeleteConfirm(company)}
+                                style={{
+                                    color: '#ff4d4f',
+                                    border: '1px solid #ff4d4f',
+                                    backgroundColor: 'transparent'
+                                }}
+                            >
+                                Delete
                             </Button>
                         ]}
                     >
@@ -269,6 +305,36 @@ const CompaniesPage = () => {
                         <StyledTextArea rows={4} />
                     </Form.Item>
                 </Form>
+            </StyledModal>
+            <StyledModal
+                title="Delete Confirmation"
+                visible={deleteConfirmVisible}
+                onOk={handleDeleteConfirm}
+                onCancel={() => setDeleteConfirmVisible(false)}
+                okText="Yes"
+                cancelText="No"
+                okButtonProps={{
+                    danger: true,
+                    style: {
+                        backgroundColor: '#ff4d4f',
+                        borderColor: '#ff4d4f'
+                    }
+                }}
+                cancelButtonProps={{
+                    style: {
+                        color: '#c7d5e0',
+                        borderColor: '#2a475e',
+                        backgroundColor: 'transparent'
+                    }
+                }}
+                bodyStyle={{
+                    background: '#1B2838',
+                    padding: '24px',
+                    color: '#c7d5e0'
+                }}
+            >
+                <p>Are you sure you want to delete "{companyToDelete?.name}" company?</p>
+                <p>This action cannot be undone.</p>
             </StyledModal>
         </div>
     );

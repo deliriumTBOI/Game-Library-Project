@@ -7,6 +7,7 @@ class CompanyService {
     constructor() {
         this.apiClient = new ApiClient();
         this.endpoint = '/companies';
+        this.cacheTimestamps = {};
     }
 
     /**
@@ -17,10 +18,31 @@ class CompanyService {
         return this.apiClient.get(this.endpoint);
     }
 
-    getCompanyWithGames = async (id) => {
-        const company = await this.getCompanyById(id);
-        const games = await this.getGamesForCompany(id);
-        return { ...company, games };
+    /**
+     * Получить компанию и ее игры
+     * @param {number} id - ID компании
+     * @param {boolean} forceRefresh - Принудительное обновление кэша
+     * @returns {Promise<Object>} - Promise с данными компании и играми
+     */
+    getCompanyWithGames = async (id, forceRefresh = false) => {
+        try {
+            console.log(`Getting company with games. ID: ${id}, forceRefresh: ${forceRefresh}`);
+
+            // Получаем базовую информацию о компании
+            const company = await this.getCompanyById(id, forceRefresh);
+            if (!company) {
+                throw new Error('Company not found');
+            }
+
+            // Получаем игры с принудительным обновлением
+            const games = await this.getGamesForCompany(id, forceRefresh);
+            console.log(`Retrieved ${games?.length || 0} games for company ${id}`);
+
+            return { ...company, games };
+        } catch (error) {
+            console.error(`Error in getCompanyWithGames for ID ${id}:`, error);
+            throw error;
+        }
     }
 
     /**
@@ -44,10 +66,14 @@ class CompanyService {
     /**
      * Получить компанию по ID
      * @param {number} id - ID компании
+     * @param {boolean} forceRefresh - Принудительное обновление кэша
      * @returns {Promise<Object>} - Promise с данными компании
      */
-    getCompanyById(id) {
-        return this.apiClient.get(`${this.endpoint}/${id}`);
+    getCompanyById(id, forceRefresh = false) {
+        // Добавляем параметр для обхода кэша при необходимости
+        const params = forceRefresh ? { _cache: Date.now() } : {};
+        console.log(`Getting company by ID: ${id}, params:`, params);
+        return this.apiClient.get(`${this.endpoint}/${id}`, params);
     }
 
     /**
@@ -118,10 +144,27 @@ class CompanyService {
     /**
      * Получить игры компании по ID
      * @param {number} companyId - ID компании
+     * @param {boolean} forceRefresh - Принудительное обновление кэша
      * @returns {Promise<Array>} - Promise со списком игр компании
      */
-    getGamesForCompany(companyId) {
-        return this.apiClient.get(`${this.endpoint}/${companyId}/games`);
+    getGamesForCompany(companyId, forceRefresh = false) {
+        // Генерируем уникальный timestamp для каждого запроса при forceRefresh
+        const cacheKey = forceRefresh ? `_cache=${Date.now()}` : '';
+        const params = forceRefresh ? { [cacheKey]: true } : {};
+
+        console.log(`Getting games for company ${companyId} with params:`, params);
+
+        return this.apiClient.get(`${this.endpoint}/${companyId}/games`, params)
+            .then(response => {
+                console.log(`Received games for company ${companyId}:`, response);
+                // Нормализуем данные - убедимся, что возвращается массив
+                if (!response) return [];
+                return Array.isArray(response) ? response : [response];
+            })
+            .catch(error => {
+                console.error(`Error getting games for company ${companyId}:`, error);
+                return [];
+            });
     }
 
     /**
@@ -166,6 +209,14 @@ class CompanyService {
      */
     removeGameFromCompany(companyId, gameId) {
         return this.apiClient.delete(`${this.endpoint}/${companyId}/games/${gameId}`);
+    }
+
+    /**
+     * Очистить кэш для конкретной компании
+     * @param {number} companyId - ID компании
+     */
+    invalidateCompanyCache(companyId) {
+        this.cacheTimestamps[companyId] = Date.now();
     }
 }
 

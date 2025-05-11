@@ -166,3 +166,17 @@
 .custom-select-dropdown .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
   background-color: #2a475e !important;
 }
+
+.custom-search-input .ant-input {
+  background-color: #16202d;
+  border-color: #2a475e;
+  color: #c7d5e0;
+}
+
+.custom-search-input .ant-input::placeholder {
+  color: #5a7a99;
+}
+
+.custom-search-input .ant-input:hover {
+  border-color: #66c0f4;
+}

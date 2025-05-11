@@ -1,5 +1,6 @@
 import ApiClient from './ApiClient';
 import ReviewService from './ReviewService';
+import CompanyService from './CompanyService';
 
 /**
  * Сервис для работы с играми
@@ -39,10 +40,12 @@ class GameService {
     /**
      * Получить игру по ID
      * @param {number} id - ID игры
+     * @param {boolean} forceRefresh - Принудительное обновление кэша
      * @returns {Promise<Object>} - Promise с данными игры
      */
-    getGameById(id) {
-        return this.apiClient.get(`${this.endpoint}/${id}`);
+    getGameById(id, forceRefresh = false) {
+        const params = forceRefresh ? { _cache: Date.now() } : {};
+        return this.apiClient.get(`${this.endpoint}/${id}`, params);
     }
 
     /**
@@ -80,7 +83,12 @@ class GameService {
      * @returns {Promise<Object>} - Promise с обновленными данными игры
      */
     updateGame(id, gameData) {
-        return this.apiClient.put(`${this.endpoint}/${id}`, gameData);
+        return this.apiClient.put(`${this.endpoint}/${id}`, gameData)
+            .then(response => {
+                // После обновления игры, также инвалидируем кэш для всех связанных компаний
+                this.invalidateRelatedCompaniesCache(id);
+                return response;
+            });
     }
 
     /**
@@ -100,7 +108,37 @@ class GameService {
      * @returns {Promise<Object>} - Promise с обновленными данными игры
      */
     patchGame(id, gameData) {
-        return this.apiClient.patch(`${this.endpoint}/${id}`, gameData);
+        return this.apiClient.patch(`${this.endpoint}/${id}`, gameData)
+            .then(response => {
+                // После обновления игры, также инвалидируем кэш для всех связанных компаний
+                this.invalidateRelatedCompaniesCache(id);
+                return response;
+            });
+    }
+
+    /**
+     * Инвалидировать кэш для всех компаний, связанных с игрой
+     * @param {number} gameId - ID игры
+     * @private
+     */
+    async invalidateRelatedCompaniesCache(gameId) {
+        try {
+            console.log(`Invalidating cache for companies related to game ${gameId}`);
+            // Получаем текущие компании игры
+            const companies = await this.getGameCompanies(gameId, true);
+
+            // Инвалидируем кэш для каждой компании
+            if (Array.isArray(companies)) {
+                companies.forEach(company => {
+                    if (company && company.id) {
+                        console.log(`Invalidating cache for company ${company.id}`);
+                        CompanyService.invalidateCompanyCache(company.id);
+                    }
+                });
+            }
+        } catch (error) {
+            console.error(`Error invalidating related companies cache:`, error);
+        }
     }
 
     /**
@@ -118,7 +156,21 @@ class GameService {
      * @returns {Promise<void>} - Promise с результатом удаления
      */
     deleteGame(id) {
-        return this.apiClient.delete(`${this.endpoint}/${id}`);
+        // Сначала сохраняем список связанных компаний
+        return this.getGameCompanies(id, true)
+            .then(companies => {
+                return this.apiClient.delete(`${this.endpoint}/${id}`)
+                    .then(() => {
+                        // После удаления инвалидируем кэш всех связанных компаний
+                        if (Array.isArray(companies)) {
+                            companies.forEach(company => {
+                                if (company && company.id) {
+                                    CompanyService.invalidateCompanyCache(company.id);
+                                }
+                            });
+                        }
+                    });
+            });
     }
 
     /**
@@ -140,7 +192,12 @@ class GameService {
      * @returns {Promise<Object>} - Promise с обновленными данными игры
      */
     addCompanyToGame(gameId, companyId) {
-        return this.apiClient.post(`${this.endpoint}/${gameId}/companies/${companyId}`);
+        return this.apiClient.post(`${this.endpoint}/${gameId}/companies/${companyId}`)
+            .then(response => {
+                // Инвалидируем кэш компании
+                CompanyService.invalidateCompanyCache(companyId);
+                return response;
+            });
     }
 
     /**
@@ -162,7 +219,12 @@ class GameService {
      * @returns {Promise<void>} - Promise с результатом удаления
      */
     removeCompanyFromGame(gameId, companyId) {
-        return this.apiClient.delete(`${this.endpoint}/${gameId}/companies/${companyId}`);
+        return this.apiClient.delete(`${this.endpoint}/${gameId}/companies/${companyId}`)
+            .then(response => {
+                // Инвалидируем кэш компании
+                CompanyService.invalidateCompanyCache(companyId);
+                return response;
+            });
     }
 
     /**
@@ -205,27 +267,28 @@ class GameService {
     /**
      * Получить игру вместе с компаниями
      * @param {number} id - ID игры
+     * @param {boolean} forceRefresh - Принудительное обновление кэша
      * @returns {Promise<Object>} - Promise с данными игры и компаниями
      */
-    getGameWithCompanies = async (id) => {
+    getGameWithCompanies = async (id, forceRefresh = false) => {
         try {
             // Проверяем, что id - это число
             if (!id) {
                 throw new Error('Game ID is required');
             }
 
-            console.log(`Fetching game with ID ${id} including companies...`);
+            console.log(`Fetching game with ID ${id} including companies, forceRefresh=${forceRefresh}...`);
 
             // Сначала пробуем получить игру обычным способом
-            const game = await this.getGameById(id);
+            const game = await this.getGameById(id, forceRefresh);
 
             if (!game) {
                 throw new Error('Game not found');
             }
 
-            // Отдельно запрашиваем компании
+            // Отдельно запрашиваем компании с принудительным обновлением
             try {
-                const companies = await this.getGameCompanies(id);
+                const companies = await this.getGameCompanies(id, forceRefresh);
                 console.log('Companies data received:', companies);
 
                 // Обрабатываем возможные форматы ответа
@@ -283,10 +346,13 @@ class GameService {
     /**
      * Получить компании игры по ID игры
      * @param {number} gameId - ID игры
+     * @param {boolean} [forceRefresh=false] - Принудительное обновление данных (добавление noCache)
      * @returns {Promise<Array>} - Promise со списком компаний
      */
-    getGameCompanies(gameId) {
-        return this.apiClient.get(`${this.endpoint}/${gameId}/companies`)
+    getGameCompanies(gameId, forceRefresh = false) {
+        const params = forceRefresh ? { noCache: Date.now() } : {};
+
+        return this.apiClient.get(`${this.endpoint}/${gameId}/companies`, params)
             .then(response => {
                 // Самый простой случай - массив компаний
                 if (Array.isArray(response)) {
@@ -310,6 +376,42 @@ class GameService {
                 console.error('Error fetching game companies:', error);
                 return [];
             });
+    }
+
+    /**
+     * Полностью обновить информацию о компаниях игры
+     * @param {number} gameId - ID игры
+     * @param {Array<number>} companyIds - Массив ID компаний
+     * @returns {Promise<Object>} - Promise с обновленными данными игры
+     */
+    updateGameCompanies = async (gameId, companyIds) => {
+        try {
+            // Сначала получаем текущие компании игры
+            const currentCompanies = await this.getGameCompanies(gameId, true);
+            const currentCompanyIds = currentCompanies.map(c => c.id);
+
+            // Выявляем компании для удаления
+            const companiesToRemove = currentCompanyIds.filter(id => !companyIds.includes(id));
+
+            // Выявляем компании для добавления
+            const companiesToAdd = companyIds.filter(id => !currentCompanyIds.includes(id));
+
+            // Последовательно удаляем компании
+            for (const companyId of companiesToRemove) {
+                await this.removeCompanyFromGame(gameId, companyId);
+            }
+
+            // Последовательно добавляем компании
+            for (const companyId of companiesToAdd) {
+                await this.addCompanyToGame(gameId, companyId);
+            }
+
+            // Возвращаем обновленную игру с компаниями
+            return this.getGameWithCompanies(gameId);
+        } catch (error) {
+            console.error('Error updating game companies:', error);
+            throw error;
+        }
     }
 }
 

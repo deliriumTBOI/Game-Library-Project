@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Typography, Card, Button, Divider, Rate, List, Tag, Spin, message, Modal, Form, Input, Select } from 'antd';
+import { Typography, Card, Button, Divider, Tag, Spin, message, Modal, Form, Input, Select } from 'antd';
 import { GameService } from '../services';
 import { CompanyService } from '../services';
 import StyledDatePicker from '../components/Styled/StyledDatePicker';
-// Импортируем dayjs как более легковесную замену moment
 import dayjs from 'dayjs';
+import styled from 'styled-components';
 
-const { Title, Paragraph } = Typography;
+const { Title, Paragraph, Text } = Typography;
 const { TextArea } = Input;
 const { Option } = Select;
 
@@ -26,6 +26,15 @@ const toServerDate = (date) => {
     }
 };
 
+const getColor = (value) => {
+    const colors = [
+        '#ff0000', '#ff3300', '#ff6600', '#ff9900',
+        '#ffcc00', '#ffff00', '#ccff00', '#99ff00',
+        '#66ff00', '#33ff00', '#00ff00'
+    ];
+    return colors[Math.min(Math.max(Math.floor(value), 0), 10)];
+};
+
 // Функция форматирования даты для отображения
 const formatDisplayDate = (dateStr) => {
     if (!dateStr) return 'Unknown';
@@ -36,7 +45,83 @@ const formatDisplayDate = (dateStr) => {
     }
 };
 
-// Удаляем ненужный валидатор, так как DatePicker уже возвращает валидные объекты Date
+const StyledModal = styled(Modal)`
+    .ant-modal-content {
+        background-color: #1B2838 !important;
+        border: 1px solid #2a475e !important;
+        color: #c7d5e0 !important;
+    }
+
+    .ant-modal-header {
+        background-color: #1B2838 !important;
+        border-bottom: 1px solid #2a475e !important;
+
+        .ant-modal-title {
+            color: #66c0f4 !important;
+        }
+    }
+
+    .ant-modal-footer {
+        background-color: #1B2838 !important;
+        border-top: 1px solid #2a475e !important;
+        padding: 16px 24px !important;
+        margin-top: 8px !important;
+
+        .ant-btn-default {
+            color: #c7d5e0 !important;
+            border-color: #2a475e !important;
+            background: transparent !important;
+        }
+    }
+
+    .ant-modal-close {
+        color: #c7d5e0 !important;
+
+        &:hover {
+            color: #66c0f4 !important;
+        }
+    }
+`;
+
+const StyledInput = styled(Input)`
+  background-color: #2a475e !important;
+  border-color: #2a475e !important;
+  color: #c7d5e0 !important;
+`;
+
+const StyledTextArea = styled(TextArea)`
+  background-color: #2a475e !important;
+  border-color: #2a475e !important;
+  color: #c7d5e0 !important;
+`;
+
+const StyledSelect = styled(Select)`
+    .ant-select-selector {
+        background-color: #2a475e !important;
+        border-color: #2a475e !important;
+        color: #c7d5e0 !important;
+    }
+
+    .ant-select-selection-placeholder {
+        color: #6b8a9e !important;
+    }
+
+    .ant-select-arrow {
+        color: #c7d5e0 !important;
+    }
+`;
+
+const StyledReviewCard = styled(Card)`
+    background-color: #1B2838;
+    border: 1px solid #2a475e;
+    margin-bottom: 16px;
+    border-radius: 8px;
+    width: 100%;
+
+    .ant-card-body {
+        padding: 16px;
+    }
+`;
 
 const GameDetail = () => {
     const { id } = useParams();
@@ -48,6 +133,7 @@ const GameDetail = () => {
     const [form] = Form.useForm();
     const [allCompanies, setAllCompanies] = useState([]);
     const [companiesLoading, setCompaniesLoading] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
         const fetchGameData = async () => {
@@ -60,7 +146,7 @@ const GameDetail = () => {
                 }
 
                 // Используем готовый метод getGameWithCompanies из GameService
-                const gameData = await GameService.getGameWithCompanies(id);
+                const gameData = await GameService.getGameWithCompanies(id, true);
 
                 if (!gameData) {
                     throw new Error('No game data returned');
@@ -124,6 +210,7 @@ const GameDetail = () => {
 
     const handleSave = async () => {
         try {
+            setIsSaving(true);
             const values = await form.validateFields();
 
             // Проверка уникальности названия игры
@@ -132,6 +219,7 @@ const GameDetail = () => {
                     const existingGame = await GameService.findGameByExactTitle(values.title);
                     if (existingGame && existingGame.id !== game.id) {
                         message.error('A game with this title already exists');
+                        setIsSaving(false);
                         return;
                     }
                 } catch (error) {
@@ -150,24 +238,13 @@ const GameDetail = () => {
             // Обновление основной информации об игре
             await GameService.updateGame(game.id, updateData);
 
-            // Обновление компаний
-            const currentCompanyIds = game.companies.map(c => c.id);
+            // Обновление компаний с использованием улучшенного метода
             const newCompanyIds = values.companies || [];
+            await GameService.updateGameCompanies(game.id, newCompanyIds);
 
-            // Удаление компаний, которые были удалены
-            const companiesToRemove = currentCompanyIds.filter(id => !newCompanyIds.includes(id));
-            for (const companyId of companiesToRemove) {
-                await GameService.removeCompanyFromGame(game.id, companyId);
-            }
+            // Обновление данных игры с принудительным обновлением кэша
+            const updatedGame = await GameService.getGameWithCompanies(game.id, true);
 
-            // Добавление новых компаний
-            const companiesToAdd = newCompanyIds.filter(id => !currentCompanyIds.includes(id));
-            for (const companyId of companiesToAdd) {
-                await GameService.addCompanyToGame(game.id, companyId);
-            }
-
-            // Обновление данных игры
-            const updatedGame = await GameService.getGameWithCompanies(game.id);
             setGame({
                 ...updatedGame,
                 companies: Array.isArray(updatedGame.companies)
@@ -183,6 +260,8 @@ const GameDetail = () => {
         } catch (error) {
             console.error('Error updating game:', error);
             message.error('Failed to update game');
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -215,80 +294,199 @@ const GameDetail = () => {
     );
 
     return (
-        <div style={{ padding: '24px' }}>
+        <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
-                <Button onClick={() => navigate(-1)}>Back to Games</Button>
-                <Button type="primary" onClick={handleEditClick}>Edit Info</Button>
+                <Button
+                    onClick={() => navigate(-1)}
+                    style={{
+                        background: '#2a475e',
+                        color: '#66c0f4',
+                        borderColor: '#2a475e'
+                    }}
+                >
+                    Back
+                </Button>
+                <Button
+                    type="primary"
+                    onClick={handleEditClick}
+                    disabled={loading}
+                    style={{ background: '#1a9fff', borderColor: '#1a9fff' }}
+                >
+                    Edit Info
+                </Button>
             </div>
 
             <Card
                 style={{ marginTop: '20px', background: '#1B2838', borderColor: '#2a475e' }}
                 cover={
                     <div style={{
-                        height: '300px',
-                        background: '#2a475e',
+                        height: '200px',
+                        background: 'linear-gradient(135deg, #1B2838 0%, #2a475e 100%)',
                         display: 'flex',
                         alignItems: 'center',
-                        justifyContent: 'center'
+                        justifyContent: 'center',
+                        position: 'relative',
+                        overflow: 'hidden'
                     }}>
-                        <Title level={2} style={{ color: '#66c0f4' }}>{game.title}</Title>
+                        <Title
+                            level={2}
+                            style={{
+                                color: '#66c0f4',
+                                textShadow: '0 2px 4px rgba(0,0,0,0.5)',
+                                padding: '0 20px',
+                                textAlign: 'center',
+                                zIndex: 1
+                            }}
+                        >
+                            {game.title}
+                        </Title>
                     </div>
                 }
             >
-                <div style={{ color: '#c7d5e0' }}>
-                    <Title level={4}>Details</Title>
-                    <p><strong>Genre:</strong> {game.genre || 'Unknown'}</p>
-                    <p><strong>Release Date:</strong> {formatDisplayDate(game.releaseDate)}</p>
-                    <p><strong>Description:</strong> {game.description || 'No description available'}</p>
+                <div style={{ color: '#c7d5e0', padding: '16px' }}>
+                    {/* Первая строка с основными деталями */}
+                    <div style={{
+                        display: 'flex',
+                        gap: '40px',
+                        marginBottom: '24px',
+                        flexWrap: 'wrap'
+                    }}>
+                        <div style={{ flex: 1, minWidth: '250px' }}>
+                            <Title level={4} style={{
+                                color: '#66c0f4',
+                                marginBottom: '12px',
+                                borderBottom: '2px solid #2a475e',
+                                paddingBottom: '8px'
+                            }}>
+                                Details
+                            </Title>
+                            <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', gap: '8px' }}>
+                                <span style={{ color: '#8F98A0' }}>Genre:</span>
+                                <span style={{ color: '#ffffff' }}>{game.genre || 'Unknown'}</span>
 
-                    <Divider />
-                    <Title level={4}>Developers & Publishers</Title>
-                    {game && game.companies && Array.isArray(game.companies) && game.companies.length > 0 ? (
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                            {game.companies.map((company, index) => (
-                                <Tag
-                                    key={company?.id || `company-${index}`}
-                                    style={{
-                                        cursor: 'pointer',
-                                        background: '#2a475e',
-                                        color: '#66c0f4',
-                                        borderColor: '#2a475e',
-                                        padding: '4px 8px'
-                                    }}
-                                    onClick={() => company?.id && navigate(`/companies/${company.id}`)}
-                                >
-                                    {company?.name || 'Unknown Company'}
-                                </Tag>
-                            ))}
+                                <span style={{ color: '#8F98A0' }}>Release Date:</span>
+                                <span style={{ color: '#ffffff' }}>{formatDisplayDate(game.releaseDate)}</span>
+                            </div>
                         </div>
-                    ) : (
-                        <p>No company information available</p>
-                    )}
 
-                    <Divider />
+                        <div style={{ flex: 2, minWidth: '300px' }}>
+                            <Title level={4} style={{
+                                color: '#66c0f4',
+                                marginBottom: '12px',
+                                borderBottom: '2px solid #2a475e',
+                                paddingBottom: '8px'
+                            }}>
+                                Description
+                            </Title>
+                            <Paragraph style={{
+                                marginBottom: 0,
+                                color: '#e5e5e5',
+                                lineHeight: '1.6'
+                            }}>
+                                {game.description || 'No description available'}
+                            </Paragraph>
+                        </div>
+                    </div>
 
-                    <Title level={4}>Reviews</Title>
-                    {game.reviews && Array.isArray(game.reviews) && game.reviews.length > 0 ? (
-                        <List
-                            dataSource={game.reviews}
-                            renderItem={review => (
-                                <List.Item>
-                                    <Card style={{ width: '100%', background: '#2a475e', borderColor: '#2a475e' }}>
-                                        <Rate disabled defaultValue={review.rating} />
-                                        <p>{review.text}</p>
-                                        <p><em>- {review.author}</em></p>
-                                    </Card>
-                                </List.Item>
-                            )}
-                        />
-                    ) : (
-                        <p>No reviews yet</p>
-                    )}
+                    <Divider style={{
+                        borderColor: '#2a475e',
+                        margin: '24px 0'
+                    }} />
+
+                    {/* Блок с компаниями */}
+                    <div style={{ marginBottom: '24px' }}>
+                        <Title level={4} style={{
+                            color: '#66c0f4',
+                            marginBottom: '12px',
+                            borderBottom: '2px solid #2a475e',
+                            paddingBottom: '8px'
+                        }}>
+                            Developers & Publishers
+                        </Title>
+                        {game.companies?.length > 0 ? (
+                            <div style={{
+                                display: 'flex',
+                                flexWrap: 'wrap',
+                                gap: '8px',
+                                backgroundColor: '#16202D',
+                                padding: '12px',
+                                borderRadius: '4px'
+                            }}>
+                                {game.companies.map((company, index) => (
+                                    <Tag
+                                        key={company?.id || `company-${index}`}
+                                        style={{
+                                            cursor: 'pointer',
+                                            background: '#2a475e',
+                                            color: '#66c0f4',
+                                            borderColor: '#66c0f4',
+                                            padding: '4px 8px',
+                                            margin: 0
+                                        }}
+                                        onClick={() => company?.id && navigate(`/companies/${company.id}`)}
+                                    >
+                                        {company?.name || 'Unknown Company'}
+                                    </Tag>
+                                ))}
+                            </div>
+                        ) : (
+                            <p style={{ color: '#8F98A0' }}>No company information available</p>
+                        )}
+                    </div>
+
+                    <Divider style={{
+                        borderColor: '#2a475e',
+                        margin: '24px 0'
+                    }} />
+
+                    {/* Блок с отзывами */}
+                    <div>
+                        <Title level={4} style={{
+                            color: '#66c0f4',
+                            marginBottom: '12px',
+                            borderBottom: '2px solid #2a475e',
+                            paddingBottom: '8px'
+                        }}>
+                            Reviews
+                        </Title>
+                        {game.reviews?.length > 0 ? (
+                            <div>
+                                {game.reviews.map(review => (
+                                    <StyledReviewCard key={review.id}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                            <Text strong style={{ color: '#66c0f4', fontSize: 16 }}>
+                                                {review.author || 'Anonymous'}
+                                            </Text>
+                                        </div>
+
+                                        <div style={{ display: 'flex', alignItems: 'center', margin: '8px 0' }}>
+                                            <Text strong style={{
+                                                color: getColor(review.rating),
+                                                marginRight: 8
+                                            }}>
+                                                {review.rating}/10
+                                            </Text>
+                                        </div>
+
+                                        <Paragraph style={{
+                                            color: '#e5e5e5',
+                                            marginBottom: 0,
+                                            lineHeight: '1.6'
+                                        }}>
+                                            {review.text}
+                                        </Paragraph>
+                                    </StyledReviewCard>
+                                ))}
+                            </div>
+                        ) : (
+                            <p style={{ color: '#8F98A0' }}>No reviews yet</p>
+                        )}
+                    </div>
                 </div>
             </Card>
 
             {/* Модальное окно редактирования */}
-            <Modal
+            <StyledModal
                 title="Edit Game Information"
                 open={isEditing}
                 onCancel={handleCancel}
@@ -296,53 +494,66 @@ const GameDetail = () => {
                 width={700}
                 okText="Save"
                 cancelText="Cancel"
+                confirmLoading={isSaving}
+                okButtonProps={{
+                    style: {
+                        backgroundColor: '#66c0f4',
+                        borderColor: '#66c0f4',
+                        color: '#1B2838'
+                    }
+                }}
+                bodyStyle={{
+                    background: '#1B2838',
+                    padding: '24px'
+                }}
             >
                 <Form
                     form={form}
                     layout="vertical"
+                    style={{ color: '#c7d5e0' }}
                 >
                     <Form.Item
                         name="title"
-                        label="Title"
+                        label={<span style={{ color: '#c7d5e0' }}>Title</span>}
                         rules={[
                             { required: true, message: 'Please input the game title!' },
                             { max: 100, message: 'Title must be less than 100 characters' }
                         ]}
                     >
-                        <Input />
+                        <StyledInput />
                     </Form.Item>
 
                     <Form.Item
                         name="description"
-                        label="Description"
+                        label={<span style={{ color: '#c7d5e0' }}>Description</span>}
                         rules={[{ max: 2000, message: 'Description must be less than 2000 characters' }]}
                     >
-                        <TextArea rows={4} />
+                        <StyledTextArea rows={4} />
                     </Form.Item>
 
                     <Form.Item
                         name="releaseDate"
-                        label="Release Date"
+                        label={<span style={{ color: '#c7d5e0' }}>Release Date</span>}
                         rules={[
                             { required: true, message: 'Please select the release date!' }
                         ]}
                     >
-                        <StyledDatePicker />
+                        <StyledDatePicker dropdownClassName="custom-datepicker-dropdown" />
                     </Form.Item>
 
                     <Form.Item
                         name="genre"
-                        label="Genre"
+                        label={<span style={{ color: '#c7d5e0' }}>Genre</span>}
                         rules={[{ max: 50, message: 'Genre must be less than 50 characters' }]}
                     >
-                        <Input />
+                        <StyledInput />
                     </Form.Item>
 
                     <Form.Item
                         name="companies"
-                        label="Companies"
+                        label={<span style={{ color: '#c7d5e0' }}>Companies</span>}
                     >
-                        <Select
+                        <StyledSelect
                             mode="multiple"
                             placeholder="Select companies"
                             loading={companiesLoading}
@@ -357,10 +568,10 @@ const GameDetail = () => {
                                     {company.name}
                                 </Option>
                             ))}
-                        </Select>
+                        </StyledSelect>
                     </Form.Item>
                 </Form>
-            </Modal>
+            </StyledModal>
         </div>
     );
 };
