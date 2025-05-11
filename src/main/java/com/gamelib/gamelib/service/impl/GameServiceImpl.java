@@ -179,6 +179,25 @@ public class GameServiceImpl implements GameService {
 
     @Override
     @Transactional
+    public Game addCompanyToGameByNames(String gameTitle, String companyName) {
+        Game game = gameRepository.findByTitle(gameTitle)
+                .orElseThrow(() -> new ResourceNotFoundException("Game not found with title: " + gameTitle));
+
+        Company company = companyRepository.findByName(companyName)
+                .orElseThrow(() -> new ResourceNotFoundException("Company not found with name: " + companyName));
+
+        game.getCompanies().add(company);
+        company.getGames().add(game);
+
+        // Сохраняем обе сущности, так как это двунаправленная связь
+        gameRepository.save(game);
+        companyRepository.save(company);
+
+        return game;
+    }
+
+    @Override
+    @Transactional
     public boolean deleteGame(Long id) {
         if (gameRepository.existsById(id)) {
             gameRepository.deleteById(id);

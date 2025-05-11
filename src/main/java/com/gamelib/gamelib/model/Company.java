@@ -1,5 +1,7 @@
 package com.gamelib.gamelib.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.gamelib.gamelib.dto.CompanyDto;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -10,6 +12,8 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
+
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -42,5 +46,25 @@ public class Company {
 
     @ManyToMany(mappedBy = "companies", cascade
             = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
+    @JsonIgnore
     private Set<Game> games = new HashSet<>();
+
+    // Метод для получения названий игр компании
+    public Set<String> getGameTitles() {
+        return this.games.stream()
+                .map(Game::getTitle)
+                .collect(Collectors.toSet());
+    }
+
+    // Метод для преобразования в DTO
+    public CompanyDto toDto() {
+        return new CompanyDto(
+                this.id,
+                this.name,
+                this.description,
+                this.foundedYear,
+                this.website,
+                this.getGameTitles()
+        );
+    }
 }

@@ -1,8 +1,11 @@
 package com.gamelib.gamelib.controller;
 
 import com.gamelib.gamelib.dto.CompanyDto;
+import com.gamelib.gamelib.dto.GameDto;
+import com.gamelib.gamelib.mapper.GameMapper;
 import com.gamelib.gamelib.mapper.CompanyMapper;
 import com.gamelib.gamelib.model.Company;
+import com.gamelib.gamelib.model.Game;
 import com.gamelib.gamelib.service.CompanyService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -12,7 +15,13 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+
+
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+
 import org.hibernate.Hibernate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,10 +42,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class CompanyController {
     private final CompanyService companyService;
     private final CompanyMapper companyMapper;
+    private final GameMapper gameMapper;
 
-    public CompanyController(CompanyService companyService, CompanyMapper companyMapper) {
+    public CompanyController(CompanyService companyService, CompanyMapper companyMapper, GameMapper gameMapper) {
         this.companyService = companyService;
         this.companyMapper = companyMapper;
+        this.gameMapper = gameMapper;
     }
 
     @GetMapping
@@ -205,14 +216,16 @@ public class CompanyController {
         @ApiResponse(responseCode = "404", description = "Компания не найдена",
                     content = @Content)
     })
-    public ResponseEntity<List<CompanyDto>> getGamesForCompany(
-            @Parameter(description = "ID компании", required = true) @PathVariable Long companyId) {
+    public ResponseEntity<List<GameDto>> getGamesForCompany(
+            @Parameter(description = "ID компании", required = true)
+            @PathVariable Long companyId) {
+
         return companyService.getCompanyById(companyId)
                 .map(company -> {
-                    if (company.getGames() != null) {
-                        Hibernate.initialize(company.getGames());
-                    }
-                    return ResponseEntity.ok(List.of(companyMapper.toDto(company)));
+                    Hibernate.initialize(company.getGames());
+                    Set<Game> games = company.getGames() != null ?
+                            company.getGames() : Collections.emptySet();
+                    return ResponseEntity.ok(gameMapper.toDtoList(new ArrayList<>(games)));
                 })
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }

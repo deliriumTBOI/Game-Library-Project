@@ -36,3 +36,133 @@
     transform: rotate(360deg);
   }
 }
+
+.custom-datepicker-dropdown {
+  background: #1B2838;
+  border: 1px solid #2a475e;
+  color: #c7d5e0;
+}
+
+.custom-datepicker-dropdown .ant-picker-cell-in-view {
+  color: #c7d5e0;
+}
+
+.custom-datepicker-dropdown .ant-picker-cell:hover:not(.ant-picker-cell-in-view) {
+  color: rgba(198, 213, 224, 0.3);
+}
+
+.custom-datepicker-dropdown .ant-picker-cell-in-view.ant-picker-cell-selected .ant-picker-cell-inner {
+  background: #66c0f4;
+  color: #1B2838;
+}
+
+.custom-datepicker-dropdown .ant-picker-header {
+  color: #66c0f4;
+  border-bottom: 1px solid #2a475e;
+}
+
+.custom-datepicker-dropdown .ant-picker-header button {
+  color: #66c0f4;
+}
+
+.custom-datepicker-dropdown .ant-picker-cell-disabled {
+  color: rgba(198, 213, 224, 0.3);
+}
+
+.custom-datepicker-dropdown .ant-picker-time-panel-cell-inner {
+  color: #c7d5e0;
+}
+
+.custom-modal .ant-modal-content {
+  background: #1B2838;
+  border: 1px solid #2a475e;
+  color: #c7d5e0;
+}
+
+.custom-modal .ant-modal-header {
+  background: #1B2838;
+  border-bottom: 1px solid #2a475e;
+}
+
+.custom-modal .ant-modal-title {
+  color: #66c0f4;
+}
+
+.custom-modal .ant-modal-footer {
+  border-top: 1px solid #2a475e;
+  background: #1B2838;
+}
+
+.custom-modal .ant-modal-close {
+  color: #c7d5e0;
+}
+
+.custom-modal .ant-modal-close:hover {
+  color: #66c0f4;
+}
+
+.custom-datepicker-dropdown {
+  background-color: #1B2838 !important;
+  border: 1px solid #2a475e !important;
+
+  .ant-picker-panel {
+    background-color: #1B2838 !important;
+    border: 1px solid #2a475e !important;
+    color: #c7d5e0 !important;
+  }
+
+  .ant-picker-header {
+    color: #66c0f4 !important;
+  }
+
+  .ant-picker-cell {
+    color: #c7d5e0 !important;
+  }
+
+  .ant-picker-cell-in-view.ant-picker-cell-selected .ant-picker-cell-inner {
+    background: #66c0f4 !important;
+    color: #1B2838 !important;
+  }
+}
+
+/* Для контейнера выпадающего меню */
+.ant-select-dropdown.custom-dropdown {
+  background: #1B2838 !important;
+  border: 1px solid #2a475e !important;
+}
+
+/* Для элементов меню */
+.ant-select-dropdown.custom-dropdown .ant-select-item {
+  color: #c7d5e0 !important;
+  background: #1B2838 !important;
+}
+
+/* Для выбранного элемента */
+.ant-select-dropdown.custom-dropdown .ant-select-item-option-selected {
+  background: #2a475e !important;
+  color: #66c0f4 !important;
+}
+
+/* Для активного элемента при наведении */
+.ant-select-dropdown.custom-dropdown .ant-select-item-option-active {
+  background: #2a475e !important;
+}
+
+/* Добавьте в ваш CSS файл */
+.custom-select-dropdown {
+  background-color: #1B2838 !important;
+  border: 1px solid #2a475e !important;
+}
+
+.custom-select-dropdown .ant-select-item {
+  color: #c7d5e0 !important;
+}
+
+.custom-select-dropdown .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+  background-color: #2a475e !important;
+  color: #66c0f4 !important;
+}
+
+.custom-select-dropdown .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+  background-color: #2a475e !important;
+}

@@ -31,9 +31,8 @@ public class GameMapper {
         dto.setGenre(game.getGenre());
 
         if (game.getCompanies() != null && Hibernate.isInitialized(game.getCompanies())) {
-            dto.setCompanyNames(game.getCompanies().stream()
-                    .map(Company::getName)
-                    .collect(Collectors.toSet()));
+            // Используем новый метод getCompanyNames()
+            dto.setCompanyNames(game.getCompanyNames());
         }
 
         if (game.getReviews() != null && Hibernate.isInitialized(game.getReviews())) {

@@ -1,8 +1,11 @@
 package com.gamelib.gamelib.repository;
 
 import com.gamelib.gamelib.model.Game;
+
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,6 +18,8 @@ public interface GameRepository extends JpaRepository<Game, Long> {
     List<Game> findByTitleIgnoreCase(String title);
 
     List<Game> findByTitleIn(Collection<String> titles);
+
+    Optional<Game> findByTitle(String title);
 
     // JPQL запрос для получения игр по минимальному рейтингу отзывов
     @Query("SELECT DISTINCT g FROM Game g JOIN g.reviews r WHERE r.rating >= :minRating")

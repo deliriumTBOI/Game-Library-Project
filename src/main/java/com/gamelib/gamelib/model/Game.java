@@ -1,5 +1,6 @@
 package com.gamelib.gamelib.model;
 
+import com.gamelib.gamelib.dto.CompanyDto;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -18,6 +19,8 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -66,5 +69,26 @@ public class Game {
         this.description = description;
         this.releaseDate = releaseDate;
         this.genre = genre;
+    }
+
+    // Метод для получения имен компаний
+    public Set<String> getCompanyNames() {
+        return this.companies.stream()
+                .map(Company::getName)
+                .collect(Collectors.toSet());
+    }
+
+    // Метод для получения компаний в виде DTO
+    public Set<CompanyDto> getCompanyDtos() {
+        return this.companies.stream()
+                .map(company -> new CompanyDto(
+                        company.getId(),
+                        company.getName(),
+                        company.getDescription(),
+                        company.getFoundedYear(),
+                        company.getWebsite(),
+                        company.getGameTitles() // используем метод из Company
+                ))
+                .collect(Collectors.toSet());
     }
 }

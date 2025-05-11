@@ -1,8 +1,10 @@
 package com.gamelib.gamelib.controller;
 
+import com.gamelib.gamelib.dto.CompanyDto;
 import com.gamelib.gamelib.dto.GameDto;
 import com.gamelib.gamelib.exception.InvalidInputException;
 import com.gamelib.gamelib.mapper.GameMapper;
+import com.gamelib.gamelib.model.Company;
 import com.gamelib.gamelib.model.Game;
 import com.gamelib.gamelib.service.GameService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -14,6 +16,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.hibernate.Hibernate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -233,6 +238,63 @@ public class GameController {
         } else {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    @GetMapping("/{id}/with-companies")
+    @Transactional(readOnly = true)
+    @Operation(summary = "Получить игру с компаниями",
+            description = "Возвращает игру по указанному ID со связанными компаниями")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Игра с компаниями успешно найдена",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = GameDto.class))),
+            @ApiResponse(responseCode = "404", description = "Игра не найдена",
+                    content = @Content)
+    })
+    public ResponseEntity<GameDto> getGameWithCompanies(@PathVariable Long id) {
+        Game game = gameService.getGameById(id);
+        if (game != null) {
+            Hibernate.initialize(game.getCompanies());
+            GameDto gameDto = gameMapper.toDto(game);
+            return ResponseEntity.ok(gameDto);
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    @PostMapping("/by-title/{gameTitle}/companies/by-name/{companyName}")
+    @Operation(summary = "Добавить компанию к игре по названиям")
+    public ResponseEntity<GameDto> addCompanyToGameByNames(
+            @PathVariable String gameTitle,
+            @PathVariable String companyName) {
+        Game updatedGame = gameService.addCompanyToGameByNames(gameTitle, companyName);
+        if (updatedGame != null) {
+            return ResponseEntity.ok(gameMapper.toDto(updatedGame));
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/{id}/companies")
+    @Transactional(readOnly = true)
+    @Operation(summary = "Получить компании игры",
+            description = "Возвращает список компаний, связанных с указанной игрой")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Список компаний успешно получен",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = CompanyDto.class))),
+            @ApiResponse(responseCode = "404", description = "Игра не найдена",
+                    content = @Content)
+    })
+    public ResponseEntity<List<CompanyDto>> getGameCompanies(@PathVariable Long id) {
+        Game game = gameService.getGameById(id);
+        if (game != null) {
+            Hibernate.initialize(game.getCompanies());
+            List<CompanyDto> companyDtos = game.getCompanies().stream()
+                    .map(Company::toDto) // используем новый метод
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok(companyDtos);
+        }
+        return ResponseEntity.notFound().build();
     }
 
     @GetMapping("/by-rating")

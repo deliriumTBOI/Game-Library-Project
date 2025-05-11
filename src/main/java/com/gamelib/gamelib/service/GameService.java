@@ -18,6 +18,8 @@ public interface GameService {
 
     boolean deleteGame(Long id);
 
+    Game addCompanyToGameByNames(String gameTitle, String companyName);
+
     Game getGameById(Long id);
 
     Game addCompanyToGame(Long gameId, Long companyId);
