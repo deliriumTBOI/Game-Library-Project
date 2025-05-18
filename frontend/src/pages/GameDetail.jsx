@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Typography, Card, Button, Divider, Tag, Spin, message, Modal, Form, Input, Select } from 'antd';
-import { GameService } from '../services';
-import { CompanyService } from '../services';
+import { GameService, CompanyService, ReviewService } from '../services';
 import StyledDatePicker from '../components/Styled/StyledDatePicker';
 import dayjs from 'dayjs';
 import styled from 'styled-components';
@@ -84,15 +83,15 @@ const StyledModal = styled(Modal)`
 `;
 
 const StyledInput = styled(Input)`
-  background-color: #2a475e !important;
-  border-color: #2a475e !important;
-  color: #c7d5e0 !important;
+    background-color: #2a475e !important;
+    border-color: #2a475e !important;
+    color: #c7d5e0 !important;
 `;
 
 const StyledTextArea = styled(TextArea)`
-  background-color: #2a475e !important;
-  border-color: #2a475e !important;
-  color: #c7d5e0 !important;
+    background-color: #2a475e !important;
+    border-color: #2a475e !important;
+    color: #c7d5e0 !important;
 `;
 
 const StyledSelect = styled(Select)`
@@ -123,6 +122,51 @@ const StyledReviewCard = styled(Card)`
     }
 `;
 
+const StyledRatingContainer = styled.div`
+    display: flex;
+    align-items: center;
+    margin: 8px 0;
+`;
+
+const StyledRatingCircle = styled.div`
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 1px solid ${props => props.active ? getColor(props.value) : '#2a475e'};
+    margin-right: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: ${props => props.active ? getColor(props.value) : 'transparent'};
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+        transform: scale(1.1);
+    }
+`;
+
+// Add this component inside GameDetail.jsx (before the main component)
+const RatingInput = ({ value, onChange }) => {
+    return (
+        <StyledRatingContainer>
+            {[...Array(10)].map((_, i) => (
+                <StyledRatingCircle
+                    key={i}
+                    active={i < value}
+                    value={i+1}
+                    onClick={() => onChange(i+1)}
+                >
+                    {i+1}
+                </StyledRatingCircle>
+            ))}
+            <Text strong style={{ marginLeft: 8, color: '#66c0f4' }}>{value}/10</Text>
+        </StyledRatingContainer>
+    );
+};
+
 const GameDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -134,6 +178,10 @@ const GameDetail = () => {
     const [allCompanies, setAllCompanies] = useState([]);
     const [companiesLoading, setCompaniesLoading] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    const [isReviewModalVisible, setIsReviewModalVisible] = useState(false);
+    const [reviewForm] = Form.useForm();
+    const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
+    const [reviewToDelete, setReviewToDelete] = useState(null);
 
     useEffect(() => {
         const fetchGameData = async () => {
@@ -196,6 +244,65 @@ const GameDetail = () => {
             message.error('Failed to load companies');
         } finally {
             setCompaniesLoading(false);
+        }
+    };
+
+    const showDeleteConfirm = (review) => {
+        setReviewToDelete(review);
+        setDeleteConfirmVisible(true);
+    };
+
+    const handleDeleteConfirm = async () => {
+        try {
+            if (!reviewToDelete?.id) {
+                message.error('Review ID is missing');
+                return;
+            }
+            await ReviewService.deleteReview(id, reviewToDelete.id);
+            message.success('Review deleted successfully');
+
+            // Обновляем данные игры после удаления отзыва
+            const updatedGame = await GameService.getGameWithCompanies(id, true);
+            setGame({
+                ...updatedGame,
+                companies: Array.isArray(updatedGame.companies)
+                    ? updatedGame.companies.map(c => ({
+                        id: c?.id || null,
+                        name: c?.name || 'Unknown Company'
+                    }))
+                    : []
+            });
+        } catch (err) {
+            message.error('Failed to delete review');
+            console.error(err);
+        } finally {
+            setDeleteConfirmVisible(false);
+            setReviewToDelete(null);
+        }
+    };
+
+    const handleReviewSubmit = async (values) => {
+        try {
+            await ReviewService.createReview(id, values);
+            message.success('Review added successfully');
+
+            // Refresh the game data to show the new review
+            const updatedGame = await GameService.getGameWithCompanies(id, true);
+            setGame({
+                ...updatedGame,
+                companies: Array.isArray(updatedGame.companies)
+                    ? updatedGame.companies.map(c => ({
+                        id: c?.id || null,
+                        name: c?.name || 'Unknown Company'
+                    }))
+                    : []
+            });
+
+            setIsReviewModalVisible(false);
+            reviewForm.resetFields();
+        } catch (err) {
+            message.error('Failed to add review');
+            console.error(err);
         }
     };
 
@@ -441,14 +548,28 @@ const GameDetail = () => {
 
                     {/* Блок с отзывами */}
                     <div>
-                        <Title level={4} style={{
-                            color: '#66c0f4',
-                            marginBottom: '12px',
-                            borderBottom: '2px solid #2a475e',
-                            paddingBottom: '8px'
-                        }}>
-                            Reviews
-                        </Title>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                            <Title level={4} style={{
+                                color: '#66c0f4',
+                                borderBottom: '2px solid #2a475e',
+                                paddingBottom: '8px',
+                                margin: 0
+                            }}>
+                                Reviews
+                            </Title>
+                            <Button
+                                type="primary"
+                                onClick={() => setIsReviewModalVisible(true)}
+                                style={{
+                                    background: '#4582a4',
+                                    borderColor: '#4582a4',
+                                    height: '32px',
+                                    padding: '0 15px'
+                                }}
+                            >
+                                Add Review
+                            </Button>
+                        </div>
                         {game.reviews?.length > 0 ? (
                             <div>
                                 {game.reviews.map(review => (
@@ -457,6 +578,17 @@ const GameDetail = () => {
                                             <Text strong style={{ color: '#66c0f4', fontSize: 16 }}>
                                                 {review.author || 'Anonymous'}
                                             </Text>
+                                            <Button
+                                                type="text"
+                                                danger
+                                                style={{ padding: 0, height: 'auto' }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    showDeleteConfirm(review);
+                                                }}
+                                            >
+                                                Delete
+                                            </Button>
                                         </div>
 
                                         <div style={{ display: 'flex', alignItems: 'center', margin: '8px 0' }}>
@@ -571,6 +703,88 @@ const GameDetail = () => {
                         </StyledSelect>
                     </Form.Item>
                 </Form>
+            </StyledModal>
+            <StyledModal
+                title="Add Review"
+                open={isReviewModalVisible}
+                onCancel={() => setIsReviewModalVisible(false)}
+                onOk={() => reviewForm.submit()}
+                width={700}
+                okText="Submit"
+                cancelText="Cancel"
+                okButtonProps={{
+                    style: {
+                        backgroundColor: '#4582a4',
+                        borderColor: '#4582a4',
+                        color: '#ffffff'
+                    }
+                }}
+                bodyStyle={{
+                    background: '#1B2838',
+                    padding: '24px'
+                }}
+            >
+                <Form
+                    form={reviewForm}
+                    layout="vertical"
+                    onFinish={handleReviewSubmit}
+                    style={{ color: '#c7d5e0' }}
+                >
+                    <Form.Item
+                        name="author"
+                        label={<span style={{ color: '#c7d5e0' }}>Your Name</span>}
+                        rules={[{ required: true, message: 'Please input your name!' }]}
+                    >
+                        <StyledInput />
+                    </Form.Item>
+                    <Form.Item
+                        name="rating"
+                        label={<span style={{ color: '#c7d5e0' }}>Rating</span>}
+                        rules={[{ required: true, message: 'Please select a rating!' }]}
+                    >
+                        <RatingInput
+                            value={reviewForm.getFieldValue('rating') || 0}
+                            onChange={(value) => reviewForm.setFieldsValue({ rating: value })}
+                        />
+                    </Form.Item>
+                    <Form.Item
+                        name="text"
+                        label={<span style={{ color: '#c7d5e0' }}>Review</span>}
+                        rules={[{ required: true, message: 'Please write your review!' }]}
+                    >
+                        <StyledTextArea rows={4} />
+                    </Form.Item>
+                </Form>
+            </StyledModal>
+            <StyledModal
+                title="Delete Confirmation"
+                open={deleteConfirmVisible}
+                onOk={handleDeleteConfirm}
+                onCancel={() => setDeleteConfirmVisible(false)}
+                okText="Yes"
+                cancelText="No"
+                okButtonProps={{
+                    danger: true,
+                    style: {
+                        backgroundColor: '#ff4d4f',
+                        borderColor: '#ff4d4f'
+                    }
+                }}
+                cancelButtonProps={{
+                    style: {
+                        color: '#c7d5e0',
+                        borderColor: '#2a475e',
+                        backgroundColor: 'transparent'
+                    }
+                }}
+                bodyStyle={{
+                    background: '#1B2838',
+                    padding: '24px',
+                    color: '#c7d5e0'
+                }}
+            >
+                <p>Are you sure you want to delete this review?</p>
+                <p>This action cannot be undone.</p>
             </StyledModal>
         </div>
     );

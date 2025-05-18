@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Typography, Card, Row, Col, Spin, message, Button, Form, Input, Modal, Tag } from 'antd';
-import { GameService } from '../services';
+import { Typography, Card, Row, Col, Spin, message, Button, Form, Input, Modal, Tag, Empty } from 'antd';
+import { GameService, ReviewService } from '../services';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { PlusOutlined, SearchOutlined, DeleteOutlined } from '@ant-design/icons';
@@ -11,7 +11,37 @@ import StyledDatePicker from '../components/Styled/StyledDatePicker';
 const { Title, Paragraph, Text } = Typography;
 const { TextArea } = Input;
 
-// Стилизованные компоненты
+// Добавляем стили для рейтинга
+const RatingContainer = styled.div`
+    display: flex;
+    align-items: center;
+    margin-top: 8px;
+    gap: 2px;
+`;
+
+const RatingCircle = styled.div`
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 1px solid ${props => props.active ? getColor(props.value) : '#2a475e'};
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: bold;
+    color: ${props => props.active ? getColor(props.value) : '#5a7a99'};
+    background-color: transparent;
+`;
+
+const getColor = (value) => {
+    const colors = [
+        '#ff0000', '#ff3300', '#ff6600', '#ff9900',
+        '#ffcc00', '#ffff00', '#ccff00', '#99ff00',
+        '#66ff00', '#33ff00', '#00ff00'
+    ];
+    return colors[Math.min(Math.max(Math.floor(value), 0), 10)];
+};
+
 const StyledModal = styled(Modal)`
     .ant-modal-content {
         background-color: #1B2838 !important;
@@ -51,9 +81,9 @@ const StyledModal = styled(Modal)`
 `;
 
 const StyledInput = styled(Input)`
-  background-color: #2a475e !important;
-  border-color: #2a475e !important;
-  color: #c7d5e0 !important;
+    background-color: #2a475e !important;
+    border-color: #2a475e !important;
+    color: #c7d5e0 !important;
 `;
 
 const StyledTextArea = styled(TextArea)`
@@ -168,6 +198,63 @@ const StyledCard = styled(Card)`
     }
 `;
 
+// Новый компонент для пустого состояния
+const StyledEmpty = styled(Empty)`
+    margin: 40px 0;
+    
+    .ant-empty-image {
+        height: 120px;
+    }
+    
+    .ant-empty-description {
+        color: #c7d5e0;
+        font-size: 16px;
+    }
+`;
+
+// Стилизованная кнопка для добавления новой игры
+const AddGameButton = styled(Button)`
+    background-color: #66c0f4 !important;
+    color: #1B2838 !important;
+    border-color: #66c0f4 !important;
+    font-weight: bold !important;
+    height: 40px !important;
+    
+    &:hover {
+        background-color: #5aacda !important;
+        border-color: #5aacda !important;
+    }
+    
+    .anticon {
+        font-size: 16px !important;
+    }
+`;
+
+// Контейнер для верхней панели с поиском и добавлением
+const TopActionsContainer = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    gap: 16px;
+`;
+
+// Стилизованный input для поиска
+const SearchInput = styled(Input)`
+    background-color: #2a475e !important;
+    border-color: #2a475e !important;
+    color: #c7d5e0 !important;
+    width: 300px !important;
+    
+    .ant-input-prefix {
+        color: #5a7a99 !important;
+    }
+    
+    &::placeholder {
+        color: #5a7a99 !important;
+    }
+`;
+
 const GamesPage = () => {
     const [games, setGames] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -182,6 +269,7 @@ const GamesPage = () => {
     const [gamesWithCompanies, setGamesWithCompanies] = useState([]);
     const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
     const [gameToDelete, setGameToDelete] = useState(null);
+    const [gamesWithRatings, setGamesWithRatings] = useState([]);
 
     useEffect(() => {
         fetchGames();
@@ -208,6 +296,27 @@ const GamesPage = () => {
             );
 
             setGamesWithCompanies(gamesWithCompaniesData);
+
+            // Загружаем рейтинги для каждой игры
+            const gamesWithRatingsData = await Promise.all(
+                data.map(async game => {
+                    try {
+                        const reviews = await ReviewService.getReviewsByGameId(game.id);
+                        const avgRating = reviews.length > 0
+                            ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
+                            : 0;
+                        return {
+                            ...game,
+                            rating: Math.round(avgRating * 10) / 10
+                        };
+                    } catch (err) {
+                        console.error(`Failed to load reviews for game ${game.id}`, err);
+                        return { ...game, rating: 0 };
+                    }
+                })
+            );
+
+            setGamesWithRatings(gamesWithRatingsData);
         } catch (err) {
             setError('Failed to load games');
             message.error('Failed to load games');
@@ -263,7 +372,8 @@ const GamesPage = () => {
         }
     };
 
-    const handleSearch = (value) => {
+    const handleSearch = (e) => {
+        const value = e.target.value;
         setSearchQuery(value);
         if (!value) {
             setFilteredGames(games);
@@ -314,122 +424,136 @@ const GamesPage = () => {
 
     return (
         <div>
-            <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '20px'
-            }}>
-                <Title level={2} style={{ color: '#66c0f4' }}>Games Catalog</Title>
+            {/* Верхняя панель с поиском и добавлением */}
+            <TopActionsContainer>
+                <div>
+                    <Title level={2} style={{ color: '#66c0f4', marginBottom: '16px' }}>Games Library</Title>
+                </div>
                 <div style={{ display: 'flex', gap: '16px' }}>
-                    <Input
-                        placeholder="Search game..."
-                        prefix={<SearchOutlined />}
+                    <SearchInput
+                        placeholder="Search games..."
                         value={searchQuery}
-                        onChange={(e) => handleSearch(e.target.value)}
-                        style={{
-                            width: 300,
-                            background: '#2a475e',
-                            borderColor: '#2a475e',
-                            color: '#c7d5e0'
-                        }}
+                        onChange={handleSearch}
+                        prefix={<SearchOutlined style={{ color: '#5a7a99' }} />}
                     />
-                    <Button
+                    <AddGameButton
                         type="primary"
                         icon={<PlusOutlined />}
                         onClick={() => setModalVisible(true)}
-                        style={{
-                            backgroundColor: '#66c0f4',
-                            borderColor: '#66c0f4',
-                            color: '#1B2838'
-                        }}
                     >
-                        Add Game
-                    </Button>
+                        Add New Game
+                    </AddGameButton>
                 </div>
-            </div>
+            </TopActionsContainer>
 
-            <Paragraph style={{
-                color: '#c7d5e0',
-                marginTop: '16px', // Добавлено это свойство
-                marginBottom: '16px'
-            }}>
-                Browse our collection of games from various developers and publishers.
-                {searchQuery && filteredGames.length === 0 && (
-                    <>
-                        <br />
-                        <span style={{ color: '#ff6b6b' }}>
-                             No games found matching "{searchQuery}"
-                        </span>
-                    </>
-                )}
-            </Paragraph>
+            {/* Отображение списка игр или пустое состояние */}
+            {filteredGames.length > 0 ? (
+                <Row gutter={[12, 12]}>
+                    {filteredGames.map(game => {
+                        const gameWithCompanies = gamesWithCompanies.find(g => g.id === game.id) || game;
+                        const gameWithRating = gamesWithRatings.find(g => g.id === game.id) || { rating: 0 };
 
-            <Row gutter={[12, 12]}>
-                {filteredGames.map(game => {
-                    const gameWithCompanies = gamesWithCompanies.find(g => g.id === game.id) || game;
-                    return (
-                        <Col xs={24} sm={12} md={8} lg={6} xl={4.8} key={game.id}>
-                            <StyledCard
-                                hoverable
-                                onClick={() => navigate(`/games/${game.id}`)}
-                                bodyStyle={{
-                                    padding: '12px',
-                                    color: '#c7d5e0',
-                                    height: '100%',
-                                    display: 'flex',
-                                    flexDirection: 'column'
-                                }}
-                            >
-                                <Card.Meta
-                                    title={game.title}
-                                    description={
-                                        <div className="game-info">
-                                            {/* Компании с увеличенным расстоянием */}
-                                            {gameWithCompanies.companies && gameWithCompanies.companies.length > 0 && (
-                                                <div className="game-companies">
-                                                    {gameWithCompanies.companies.slice(0, 3).map((company, index) => (
-                                                        <Tag key={index} className="game-company">
-                                                            {company.name || company}
-                                                        </Tag>
-                                                    ))}
-                                                    {gameWithCompanies.companies.length > 3 && (
-                                                        <Tag className="game-company">+{gameWithCompanies.companies.length - 3}</Tag>
-                                                    )}
-                                                </div>
-                                            )}
-                                            {/* Жанры */}
-                                            {game.genre && (
-                                                <div className="game-genres">
-                                                    {game.genre.split(',').slice(0, 3).map((genre, index) => (
-                                                        <span key={index} className="game-genre">
-                                                            {genre.trim()}
-                                                        </span>
-                                                    ))}
-                                                    {game.genre.split(',').length > 3 && (
-                                                        <span className="game-genre">...</span>
-                                                    )}
-                                                </div>
-                                            )}
-                                        </div>
-                                    }
-                                />
-                                <Button
-                                    className="delete-btn"
-                                    type="text"
-                                    icon={<DeleteOutlined />}
-                                    loading={deletingId === game.id}
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        showDeleteConfirm(game);
+                        return (
+                            <Col xs={24} sm={12} md={8} lg={6} xl={4.8} key={game.id}>
+                                <StyledCard
+                                    hoverable
+                                    onClick={() => navigate(`/games/${game.id}`)}
+                                    bodyStyle={{
+                                        padding: '12px',
+                                        color: '#c7d5e0',
+                                        height: '100%',
+                                        display: 'flex',
+                                        flexDirection: 'column'
                                     }}
-                                    size="small"
-                                />
-                            </StyledCard>
-                        </Col>
-                    );
-                })}
-            </Row>
+                                >
+                                    <Card.Meta
+                                        title={game.title}
+                                        description={
+                                            <div className="game-info">
+                                                {/* Компании */}
+                                                {gameWithCompanies.companies && gameWithCompanies.companies.length > 0 && (
+                                                    <div className="game-companies">
+                                                        {gameWithCompanies.companies.slice(0, 3).map((company, index) => (
+                                                            <Tag key={index} className="game-company">
+                                                                {company.name || company}
+                                                            </Tag>
+                                                        ))}
+                                                        {gameWithCompanies.companies.length > 3 && (
+                                                            <Tag className="game-company">+{gameWithCompanies.companies.length - 3}</Tag>
+                                                        )}
+                                                    </div>
+                                                )}
+                                                {/* Жанры */}
+                                                {game.genre && (
+                                                    <div className="game-genres">
+                                                        {game.genre.split(',').slice(0, 3).map((genre, index) => (
+                                                            <span key={index} className="game-genre">
+                                                                {genre.trim()}
+                                                            </span>
+                                                        ))}
+                                                        {game.genre.split(',').length > 3 && (
+                                                            <span className="game-genre">...</span>
+                                                        )}
+                                                    </div>
+                                                )}
+                                                {/* Рейтинг */}
+                                                <div style={{ marginTop: '8px' }}>
+                                                    <Text style={{ fontSize: '12px', color: '#c7d5e0', marginBottom: '4px', display: 'block' }}>
+                                                        Rating: {gameWithRating.rating}/10
+                                                    </Text>
+                                                    <RatingContainer>
+                                                        {[...Array(10)].map((_, i) => (
+                                                            <RatingCircle
+                                                                key={i}
+                                                                active={i < gameWithRating.rating}
+                                                                value={i}
+                                                            >
+                                                                {i+1}
+                                                            </RatingCircle>
+                                                        ))}
+                                                    </RatingContainer>
+                                                </div>
+                                            </div>
+                                        }
+                                    />
+                                    <Button
+                                        className="delete-btn"
+                                        type="text"
+                                        icon={<DeleteOutlined />}
+                                        loading={deletingId === game.id}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            showDeleteConfirm(game);
+                                        }}
+                                        size="small"
+                                    />
+                                </StyledCard>
+                            </Col>
+                        );
+                    })}
+                </Row>
+            ) : (
+                <StyledEmpty
+                    image={Empty.PRESENTED_IMAGE_SIMPLE}
+                    description={
+                        <div>
+                            <Text style={{ color: '#c7d5e0', fontSize: '16px' }}>
+                                No games found. Add your first game to start building your collection!
+                            </Text>
+                            <div style={{ marginTop: '24px' }}>
+                                <AddGameButton
+                                    type="primary"
+                                    icon={<PlusOutlined />}
+                                    onClick={() => setModalVisible(true)}
+                                >
+                                    Add First Game
+                                </AddGameButton>
+                            </div>
+                        </div>
+                    }
+                />
+            )}
+
             <StyledModal
                 title="Add New Game"
                 visible={modalVisible}

@@ -5,10 +5,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGamepad } from '@fortawesome/free-solid-svg-icons';
 import GamesPage from './pages/GamesPage';
 import CompaniesPage from './pages/CompaniesPage';
-import ReviewsPage from './pages/ReviewsPage';
 import GameDetail from './pages/GameDetail';
 import CompanyDetail from './pages/CompanyDetail';
-import ReviewDetail from './pages/ReviewDetail';
 
 const { Header, Content, Footer } = Layout;
 const { Title } = Typography;
@@ -83,9 +81,6 @@ function App() {
                 <Menu.Item key="companies">
                   <Link to="/companies">Companies</Link>
                 </Menu.Item>
-                <Menu.Item key="reviews">
-                  <Link to="/reviews">Reviews</Link>
-                </Menu.Item>
               </Menu>
 
               <div style={{
@@ -114,13 +109,10 @@ function App() {
               <Routes>
                 <Route path="/" element={<GamesPage />} />
                 <Route path="/companies" element={<CompaniesPage />} />
-                <Route path="/reviews" element={<ReviewsPage />} />
                 <Route path="/games" element={<GamesPage />} />
                 <Route path="/games/:id" element={<GameDetail />} />
                 <Route path="/" element={<Navigate to="/games" replace />} />
                 <Route path="/companies/:id" element={<CompanyDetail />} />
-                <Route path="/reviews" element={<ReviewsPage />} />
-                <Route path="/reviews/:gameId" element={<ReviewDetail />} />
               </Routes>
             </div>
           </Content>
