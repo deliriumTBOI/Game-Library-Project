@@ -95,19 +95,19 @@
 
 Страница с информацией об игре.  
 
-![Окно с игрой](Mockups/game_page.png)  
+![Окно с игрой](https://github.com/deliriumTBOI/Game-Library-Project/blob/main/Mockups/game_page.png)  
 
 Страница добавления игры.  
 
-![Добавление игры](Mockups/game_add.png)  
+![Добавление игры](https://github.com/deliriumTBOI/Game-Library-Project/blob/main/Mockups/game_add.png) 
 
 Страница добавления отзыва.  
 
-![Добавление отзыва](Mockups/review_add.png) 
+![Добавление отзыва](https://github.com/deliriumTBOI/Game-Library-Project/blob/main/Mockups/review_add.png) 
 
 Ошибка поиска.  
 
-![Ошибка поиска](Mockups/error_page.png)  
+![Ошибка поиска](https://github.com/deliriumTBOI/Game-Library-Project/blob/main/Mockups/error_page.png)  
 
 <a name="user_specifications"/>
 
