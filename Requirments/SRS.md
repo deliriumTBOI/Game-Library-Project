@@ -95,19 +95,19 @@
 
 Страница с информацией об игре.  
 
-![Окно с игрой](Mockups/game_page.pdf)  
+![Окно с игрой](Mockups/game_page.png)  
 
 Страница добавления игры.  
 
-![Добавление игры](Mockups/game_add.pdf)  
+![Добавление игры](Mockups/game_add.png)  
 
 Страница добавления отзыва.  
 
-![Добавление отзыва](Mockups/review_add.pdf) 
+![Добавление отзыва](Mockups/review_add.png) 
 
 Ошибка поиска.  
 
-![Ошибка поиска](Mockups/error_page.pdf)  
+![Ошибка поиска](Mockups/error_page.png)  
 
 <a name="user_specifications"/>
 
