@@ -91,23 +91,23 @@
 
 Каталог с добавленными играми.  
 
-![Каталог игр](Mockups/game_catalog.png)  
+![Каталог игр](Mockups/game_catalog.pdf)  
 
 Страница с информацией об игре.  
 
-![Окно с игрой](Mockups/game_page.png)  
+![Окно с игрой](Mockups/game_page.pdf)  
 
 Страница добавления игры.  
 
-![Добавление игры](Mockups/game_add.png)  
+![Добавление игры](Mockups/game_add.pdf)  
 
 Страница добавления отзыва.  
 
-![Добавление отзыва](Mockups/review_add.png) 
+![Добавление отзыва](Mockups/review_add.pdf) 
 
 Ошибка поиска.  
 
-![Ошибка поиска](Mockups/error_page.png)  
+![Ошибка поиска](Mockups/error_page.pdf)  
 
 <a name="user_specifications"/>
 
