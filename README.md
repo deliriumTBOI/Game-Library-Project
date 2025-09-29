@@ -5,9 +5,9 @@
 
 Операционная система: Windows / Linux  
 
-Язык серверной части: Java (Spring Boot).  
+Язык серверной части: Java (Spring Boot).
 Язык клиентской части: JavaScript, HTML, CSS.  
 
-[Документ SRS проекта](https://github.com/deliriumTBOI/Game-Library/blob/main/Requirments/SRS.md)  
+[Документ SRS проекта](https://github.com/deliriumTBOI/Game-Library-Project/blob/main/Requirments/SRS.md)  
 
 [Изображения пользовательского интерфейса](https://github.com/deliriumTBOI/Game-Library-Project/tree/main/Mockups)  
