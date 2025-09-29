@@ -91,7 +91,7 @@
 
 Каталог с добавленными играми.  
 
-![Каталог игр](https://github.com/deliriumTBOI/Game-Library-Project/blob/main/Mockups/game_catalog.pdf)  
+![Каталог игр](https://github.com/deliriumTBOI/Game-Library-Project/blob/main/Mockups/game_catalog.png)  
 
 Страница с информацией об игре.  
 
