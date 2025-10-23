@@ -1,6 +1,6 @@
 # Диаграмма Состояний: *Game Library*
 
-![State](https://github.com/deliriumTBOI/Game-Library-Project/blob/main/Diagrams/state.png)  
+![State](https://github.com/deliriumTBOI/Game-Library-Project/blob/main/Diagrams/states.png)  
 
 ---
 
