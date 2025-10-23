@@ -9,7 +9,7 @@
 
 ## Диаграмма классов
 
-![Class Diagram](/docs/diagrams/domain_model.png)
+![Class Diagram](https://github.com/deliriumTBOI/Game-Library-Project/blob/main/Diagrams/domain_model.png)  
 
 ---
 
