@@ -14,8 +14,7 @@
 
 ## 2. Диаграмма компонентов
 
-*(сюда вставляется диаграмма компонентов)*  
-![Component Diagram](component%20diagram.png)
+![Component Diagram](https://github.com/deliriumTBOI/Game-Library-Project/blob/main/Diagrams/component_diagram.png)  
 
 ---
 
