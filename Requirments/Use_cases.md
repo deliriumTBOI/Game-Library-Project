@@ -1,5 +1,11 @@
 # Сценарии использования системы Game Library
 
+## Диаграмма активностей
+
+![Activity Diagram](https://github.com/deliriumTBOI/Game-Library-Project/blob/main/Diagrams/use_cases.png)  
+
+---
+
 ## 1. View Game Information (Просмотр информации об игре)
 **Акторы:** Guest, Registered User  
 **Цель:** Получить подробную информацию об игре.  
