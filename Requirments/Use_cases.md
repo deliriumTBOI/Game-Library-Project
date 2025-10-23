@@ -2,7 +2,7 @@
 
 ## Диаграмма активностей
 
-![Activity Diagram](https://github.com/deliriumTBOI/Game-Library-Project/blob/main/Diagrams/use_cases.png)  
+![Activity Diagram](https://github.com/deliriumTBOI/Game-Library-Project/blob/main/Diagrams/use_case.png)  
 
 ---
 
