@@ -31,6 +31,12 @@
 
 ---
 
+## Диаграмма активности
+
+![Activity Diagram1](https://github.com/deliriumTBOI/Game-Library-Project/blob/main/Diagrams/activity1.png)  
+
+---
+
 ## 2. Просмотр информации об игре (View Game Information)
 
 **Акторы:** Пользователь (User)  
@@ -48,6 +54,10 @@
 9. **Client UI:** Рендерит страницу игры с отзывами и данными.
 
 **Конец.**
+
+## Диаграмма активности
+
+![Activity Diagram2](https://github.com/deliriumTBOI/Game-Library-Project/blob/main/Diagrams/activity2.png)  
 
 ---
 
@@ -83,6 +93,10 @@
 - **Client UI:** Отображает подсказки:  
   - “Комментарий не может быть пустым.”  
   - “Пожалуйста, выберите рейтинг.”  
+
+## Диаграмма активности
+
+![Activity Diagram3](https://github.com/deliriumTBOI/Game-Library-Project/blob/main/Diagrams/activity3.png)  
 
 ---
 
